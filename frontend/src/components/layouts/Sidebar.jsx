@@ -19,7 +19,7 @@ const Sidebar = () => {
       <NavLink to="/dashboard">
         {({ isActive }) => (
           <Button
-            variant="secondary"
+            variant="default"
             className={cn(
               "w-full justify-start gap-3 px-4 py-2 rounded-lg",
               isActive && "bg-muted text-primary"
