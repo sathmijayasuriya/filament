@@ -1,14 +1,10 @@
-import './App.css'
-import { Button } from "@/components/ui/button"
+import { RouterProvider } from "react-router-dom";
+import router from "./routes";
 
 function App() {
-
   return (
-    <div className="flex flex-col items-center justify-center min-h-svh">
-    <Button>Click me</Button>
-  </div>
-
-  )
+    <RouterProvider router={router}>{/* <ScrollToTop /> */}</RouterProvider>
+  );
 }
 
-export default App
+export default App;
