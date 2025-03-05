@@ -1,15 +1,18 @@
 import { Button } from "@/components/ui/button";
-import {Breadcrumb,BreadcrumbItem,BreadcrumbLink,BreadcrumbSeparator,} from "@/components/ui/breadcrumb";
 import { FunnelIcon, ViewColumnsIcon, EyeIcon,PencilSquareIcon,TrashIcon} from "@heroicons/react/24/solid";
 import {Pagination,PaginationContent,PaginationEllipsis,PaginationItem,PaginationLink,PaginationNext,PaginationPrevious,} from "@/components/ui/pagination";
 import {flexRender,getCoreRowModel,getFilteredRowModel,getPaginationRowModel,getSortedRowModel,useReactTable,} from "@tanstack/react-table";
-import { ArrowUpDown, ChevronDown, MoreHorizontal } from "lucide-react";
+import { ArrowUpDown } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import {Select,SelectContent,SelectItem,SelectTrigger,SelectValue,} from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
-
+import { Calendar } from "@/components/ui/calendar"; 
+import { CalendarIcon } from "lucide-react"
+import { Popover, PopoverContent,PopoverTrigger,} from "@/components/ui/popover"
+import {Menubar,MenubarContent,MenubarItem,MenubarMenu,MenubarSeparator,MenubarShortcut,MenubarTrigger,} from "@/components/ui/menubar"
+   
 // Sample data (replace with your actual data)
 const data = [
   {
@@ -66,6 +69,9 @@ const PostsTable = () => {
   const [columnVisibility, setColumnVisibility] = useState({});
   const [rowSelection, setRowSelection] = useState({});
   const [perPage, setPerPage] = useState(5);
+
+  const [startDate, setStartDate] = useState(null);
+  const [endDate, setEndDate] = useState(null);
 
   const columns = [
     {
@@ -199,19 +205,96 @@ const PostsTable = () => {
       rowSelection,
     },
   });
+  const filteredData = data.filter((post) => {
+    const postDate = new Date(post.publishedDate);
+    if (startDate && postDate < new Date(startDate)) return false;
+    if (endDate && postDate > new Date(endDate)) return false;
+    return true;
+  });
+
 
   return (
     <div className="p-4">
-
       <div className="rounded-md border">
-      <div className=" border-b">
-        <div className="flex justify-end items-center py-1 my-3 mx-5 space-x-2 ">
-        <Input placeholder="Search" className="w-[300px]" />
-            <FunnelIcon className="text-[#A2A2AB] h-6 w-6 hover:text-gray-500" />
+        <div className=" border-b">
+          <div className="flex justify-end items-center py-1 my-3 mx-5 space-x-2 ">
+            <Input placeholder="Search" className="w-[300px]" />
+            <Menubar>
+              <MenubarMenu>
+                <MenubarTrigger>
+                  <FunnelIcon className="text-[#A2A2AB] h-6 w-6 hover:text-gray-500" />
+                </MenubarTrigger>
+                <MenubarContent align="start" side="bottom">
+                  <div className="p-4 space-y-4">
+                    <div className="flex flex-col">
+                      <label>From</label>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant={"outline"}
+                            className="w-[240px] justify-start text-left font-normal"
+                          >
+                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            {startDate ? (
+                              startDate.toLocaleDateString()
+                            ) : (
+                              <span>Pick a date</span>
+                            )}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <Calendar
+                            selectedDate={startDate}
+                            onDateChange={setStartDate}
+                          />
+                        </PopoverContent>
+                      </Popover>
+                    </div>
+                    <div className="flex flex-col">
+                      <label>Until</label>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant={"outline"}
+                            className="w-[240px] justify-start text-left font-normal"
+                          >
+                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            {endDate ? (
+                              endDate.toLocaleDateString()
+                            ) : (
+                              <span>Pick a date</span>
+                            )}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <Calendar
+                            selectedDate={endDate}
+                            onDateChange={setEndDate}
+                          />
+                        </PopoverContent>
+                      </Popover>
+                    </div>
+                  </div>
+                </MenubarContent>
+              </MenubarMenu>
+            </Menubar>
             <ViewColumnsIcon className="text-[#A2A2AB] h-6 w-6 hover:text-gray-500" />
+          </div>
 
+          <div className="border-t">
+            <div className="flex justify-between items-center mx-3 py-1 my-3 space-x-2">
+              <span className="text-gray-600 font-semibold">50 records selected</span>
+              <div>
+                <Button className="text-orange-500" variant="link" size="sm">
+                  Select all
+                </Button>
+                <Button className="text-red-500" variant="link" size="sm">
+                  Deselect all
+                </Button>
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
         <table className="w-full">
           <thead className="border-b">
             {table.getHeaderGroups().map((headerGroup) => (
@@ -221,10 +304,12 @@ const PostsTable = () => {
                     key={header.id}
                     className="px-4 py-2 text-left font-medium"
                   >
-                    {header.isPlaceholder ? null : flexRender(
-                      header.column.columnDef.header,
-                      header.getContext()
-                    )}
+                    {header.isPlaceholder
+                      ? null
+                      : flexRender(
+                          header.column.columnDef.header,
+                          header.getContext()
+                        )}
                   </th>
                 ))}
               </tr>
@@ -243,19 +328,27 @@ const PostsTable = () => {
           </tbody>
         </table>
         <div className="flex justify-between items-center  py-1 my-3 mx-5 ">
-        {/* 1 */}
-        <div>
-          <p className="w-[max-content]">
-            Showing {table.getState().pagination.pageIndex * table.getState().pagination.pageSize + 1} to{" "}
-            {Math.min(
-              (table.getState().pagination.pageIndex + 1) * table.getState().pagination.pageSize,
-              table.getRowModel().rows.length
-            )}{" "}
-            of {table.getRowModel().rows.length} results
-          </p>
-        </div>
-        {/* 2 */}
-          <Select value={perPage.toString()} onValueChange={(value) => setPerPage(parseInt(value))}>
+          {/* 1 */}
+          <div>
+            <p className="w-[max-content]">
+              Showing{" "}
+              {table.getState().pagination.pageIndex *
+                table.getState().pagination.pageSize +
+                1}{" "}
+              to{" "}
+              {Math.min(
+                (table.getState().pagination.pageIndex + 1) *
+                  table.getState().pagination.pageSize,
+                table.getRowModel().rows.length
+              )}{" "}
+              of {table.getRowModel().rows.length} results
+            </p>
+          </div>
+          {/* 2 */}
+          <Select
+            value={perPage.toString()}
+            onValueChange={(value) => setPerPage(parseInt(value))}
+          >
             <SelectTrigger className="w-[120px]">
               <SelectValue placeholder="Per page" />
             </SelectTrigger>
@@ -265,31 +358,33 @@ const PostsTable = () => {
               <SelectItem value="20">20</SelectItem>
             </SelectContent>
           </Select>
-        {/* 3 */}
-        <div className="w-auto">
-        <Pagination
-          onPageChange={(page) => table.setPageIndex(page - 1)}
-          currentPage={table.getState().pagination.pageIndex + 1}
-          totalPages={table.getPageCount()}
-        >
-          <PaginationContent>
-            <PaginationPrevious>Previous</PaginationPrevious>
-            <PaginationItem page={1} />
-            <PaginationEllipsis />
-            <PaginationItem page={table.getState().pagination.pageIndex} />
-            <PaginationItem page={table.getState().pagination.pageIndex + 1} active />
-            <PaginationItem page={table.getState().pagination.pageIndex + 2} />
-            <PaginationEllipsis />
-            <PaginationItem page={table.getPageCount()} />
-            <PaginationNext>Next</PaginationNext>
-          </PaginationContent>
-        </Pagination>
+          {/* 3 */}
+          <div className="w-auto">
+            <Pagination
+              onPageChange={(page) => table.setPageIndex(page - 1)}
+              currentPage={table.getState().pagination.pageIndex + 1}
+              totalPages={table.getPageCount()}
+            >
+              <PaginationContent>
+                <PaginationPrevious>Previous</PaginationPrevious>
+                <PaginationItem page={1} />
+                <PaginationEllipsis />
+                <PaginationItem page={table.getState().pagination.pageIndex} />
+                <PaginationItem
+                  page={table.getState().pagination.pageIndex + 1}
+                  active
+                />
+                <PaginationItem
+                  page={table.getState().pagination.pageIndex + 2}
+                />
+                <PaginationEllipsis />
+                <PaginationItem page={table.getPageCount()} />
+                <PaginationNext>Next</PaginationNext>
+              </PaginationContent>
+            </Pagination>
+          </div>
         </div>
       </div>
-      </div>
-
-
-
     </div>
   );
 };
