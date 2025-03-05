@@ -3,7 +3,9 @@ import { createBrowserRouter ,Navigate} from "react-router-dom";
 import Layout from "../components/layouts/UserLayout";
 import { Dashboard } from "../views/Dashboard";
 import { Categories } from "../views/Categories";
+// import {PostsCreate} from "../views/PostsCreate";
 import Posts from "../views/Posts";
+import PostsCreate from "../views/PostsCreate";
 
 const router = createBrowserRouter([
   {
@@ -21,6 +23,10 @@ const router = createBrowserRouter([
       {
         path: "/categories",
         element: <Categories />,
+      },
+      {
+        path: "/posts/create",
+        element: <PostsCreate/>,
       },
       {
         path: "*",

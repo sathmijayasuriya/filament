@@ -5,9 +5,8 @@ import {
   BreadcrumbLink,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
-import { Link } from "react-router-dom";
 
-export default function PostHeader() {
+export default function FormHeader() {
   return (
     <div className="p-6">
       {/* Breadcrumb Navigation */}
@@ -17,16 +16,11 @@ export default function PostHeader() {
         </BreadcrumbItem>
         <BreadcrumbSeparator />
         <BreadcrumbItem>
-          <BreadcrumbLink href="#">List</BreadcrumbLink>
+          <BreadcrumbLink href="#">Create</BreadcrumbLink>
         </BreadcrumbItem>
       </Breadcrumb>
       <div className="flex justify-between items-center mt-4">
-        <h2 className="text-2xl font-bold">Posts</h2>
-        <Link to="/posts/create">
-          <Button className="bg-orange-400 hover:bg-orange-500 text-white">
-            New post
-          </Button>
-        </Link>
+        <h2 className="text-2xl font-bold">Create Post </h2>
       </div>
 
       {/* post table */}
