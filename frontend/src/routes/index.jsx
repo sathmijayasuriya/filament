@@ -1,24 +1,31 @@
-import { createHashRouter } from "react-router-dom";
+// import { createHashRouter } from "react-router-dom";
+import { createBrowserRouter ,Navigate} from "react-router-dom";
 import Posts from "../views/Posts";
 import Layout from "../components/layouts/UserLayout";
+import { Dashboard } from "../views/Dashboard";
+import { Categories } from "../views/Categories";
 
-const router = createHashRouter([
+const router = createBrowserRouter([
   {
     path: "/",
     element: <Layout />,
     children: [
       {
-        path: "/",
+        path: "/posts",
         element: <Posts/>,
       },
-    //   {
-    //     path: "chatList",
-    //     element: <ChatList/>,
-    //   },
-    //   {
-    //     path: "chatWindow",
-    //     element: <Chat />,
-    //   },
+      {
+        path: "/",
+        element: <Dashboard/>,
+      },
+      {
+        path: "categories",
+        element: <Categories />,
+      },
+      {
+        path: "*",
+        element: <Navigate to="/" replace />,
+      },
     ],
   },
 ]);

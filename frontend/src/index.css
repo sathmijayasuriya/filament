@@ -61,10 +61,10 @@ a:hover {
 
 body {
   margin: 5;
-  display: flex;
-  place-items: center;
-  min-width: 320px;
-  min-height: 100vh;
+  /* display: flex; */
+  /* place-items: center; */
+  /* min-width: 320px; */
+  /* min-height: 100vh; */
 }
 
 /* h1 {
@@ -81,7 +81,7 @@ button {
   font-family: inherit;
   /* background-color: #1a1a1a; */
   /* cursor: pointer; */
-  transition: border-color 0.25s;
+  /* transition: border-color 0.25s; */
 }
 button:hover {
   /* border-color: #c5c6ce; */

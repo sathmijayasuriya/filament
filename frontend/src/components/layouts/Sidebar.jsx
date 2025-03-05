@@ -30,18 +30,18 @@ const Sidebar = () => {
   const [blogOpen, setBlogOpen] = useState(false);
 
   return (
-    <div className="h-screen w-64 bg-white border-r p-4 flex flex-col">
+    <div className="h-screen w-80 bg-white border-r p-4 mt-6 flex flex-col">
       {/* Dashboard */}
-      <NavLink to="/dashboard">
+      <NavLink to="/">
         {({ isActive }) => (
           <Button
             variant="default"
             className={cn(
-              "w-full justify-start gap-3 px-4 py-2 rounded-lg",
-              isActive && "bg-muted text-primary"
+              "text-[#3F3F46] w-full justify-start gap-3 px-4 py-2 rounded-lg",
+              isActive && "bg-orange-50 text-orange-600" // active styling
             )}
           >
-            <HomeIcon className="w-5 h-5" />
+            <HomeIcon className={cn("text-[#A2A2AB] !w-6 !h-16", isActive && "text-orange-600")} />
             Dashboard
           </Button>
         )}
@@ -52,7 +52,7 @@ const Sidebar = () => {
         <CollapsibleTrigger asChild>
           <Button
             variant="ghost"
-            className="w-full justify-between px-4 py-2 rounded-lg"
+            className="text-[#3F3F46] w-full justify-between px-4 py-2 rounded-lg"
           >
             <span className="flex items-center gap-3">Shop</span>
             <ChevronDownIcon
@@ -62,17 +62,17 @@ const Sidebar = () => {
             />
           </Button>
         </CollapsibleTrigger>
-        <CollapsibleContent className="pl-6 space-y-2">
+        <CollapsibleContent className=" space-y-2">
           <NavLink to="/products">
             {({ isActive }) => (
               <Button
                 variant="ghost"
                 className={cn(
-                  "w-full justify-start px-4 py-2",
+                  "text-[#3F3F46] w-full justify-start px-4 py-2",
                   isActive && "bg-muted text-primary"
                 )}
               >
-                <Squares2X2Icon className="w-5 h-5" />
+                <Squares2X2Icon className={cn("text-[#A2A2AB] !w-6 !h-16", isActive && "text-orange-600")} />
                 Products
               </Button>
             )}
@@ -82,14 +82,14 @@ const Sidebar = () => {
               <Button
                 variant="ghost"
                 className={cn(
-                  "w-full justify-start px-4 py-2",
+                  "text-[#3F3F46] w-full justify-start px-4 py-2",
                   isActive && "bg-muted text-primary"
                 )}
               >
-                <ShoppingBagIcon className="w-5 h-5" />
+                <ShoppingBagIcon className={cn("text-[#A2A2AB] !w-6 !h-16", isActive && "text-orange-600")} />
                 Orders
-                <Badge className="ml-auto bg-orange-200 text-orange-800">
-                  205
+                <Badge className="ml-auto border border-[rgb(251,238,213)] bg-[rgb(255,251,235)] text-[rgb(217,119,6)]">
+                  206
                 </Badge>
               </Button>
             )}
@@ -99,11 +99,11 @@ const Sidebar = () => {
               <Button
                 variant="ghost"
                 className={cn(
-                  "w-full justify-start px-4 py-2",
+                  "text-[#3F3F46] w-full justify-start px-4 py-2",
                   isActive && "bg-muted text-primary"
                 )}
               >
-                <UserGroupIcon className="w-5 h-5" />
+                <UserGroupIcon className={cn("text-[#A2A2AB] !w-6 !h-16", isActive && "text-orange-600")} />
                 Customers
               </Button>
             )}
@@ -116,8 +116,8 @@ const Sidebar = () => {
         <CollapsibleTrigger asChild>
           <Button
             variant="ghost"
-            className="w-full justify-between px-4 py-2 mt-3 rounded-lg"
-          >
+            className="text-[#3F3F46] w-full justify-between px-4 py-2 mt-3 rounded-lg"
+          > 
             <span className="flex items-center gap-3">
               {/* <Folder className="w-5 h-5" /> */}
               Blog
@@ -129,31 +129,31 @@ const Sidebar = () => {
             />
           </Button>
         </CollapsibleTrigger>
-        <CollapsibleContent className="pl-6 space-y-2">
+        <CollapsibleContent className="space-y-2">
           <NavLink to="/posts">
-            {({ isActive }) => (
+          {({ isActive }) => (
               <Button
                 variant="ghost"
                 className={cn(
-                  "w-full justify-start px-4 py-2 text-orange-600 bg-orange-50",
-                  isActive && "bg-muted text-primary"
+                  "text-[#3F3F46] w-full justify-start px-4 py-2",
+                  isActive && "bg-orange-50 text-orange-600"
                 )}
               >
-                <DocumentTextIcon className="w-5 h-5" />
+                <DocumentTextIcon className={cn("text-[#A2A2AB] !w-6 !h-16", isActive && "text-orange-600")} />
                 Posts
               </Button>
             )}
           </NavLink>
           <NavLink to="/categories">
-            {({ isActive }) => (
+          {({ isActive }) => (
               <Button
                 variant="ghost"
                 className={cn(
-                  "w-full justify-start px-4 py-2",
-                  isActive && "bg-muted text-primary"
+                  "text-[#3F3F46] w-full justify-start px-4 py-2",
+                  isActive && "bg-orange-50 text-orange-600"
                 )}
               >
-                <RectangleStackIcon className="w-5 h-5" />
+                <RectangleStackIcon className={cn("text-[#A2A2AB] !w-6 !h-16", isActive && "text-orange-600")} />
                 Categories
               </Button>
             )}
@@ -163,11 +163,11 @@ const Sidebar = () => {
               <Button
                 variant="ghost"
                 className={cn(
-                  "w-full justify-start px-4 py-2",
+                  "text-[#3F3F46] w-full justify-start px-4 py-2",
                   isActive && "bg-muted text-primary"
                 )}
               >
-                <UsersIcon className="w-5 h-5" />
+                <UsersIcon className={cn("text-[#A2A2AB] !w-6 !h-16", isActive && "text-orange-600")} />
                 Authors
               </Button>
             )}
@@ -177,11 +177,11 @@ const Sidebar = () => {
               <Button
                 variant="ghost"
                 className={cn(
-                  "w-full justify-start px-4 py-2",
+                  "text-[#3F3F46] w-full justify-start px-4 py-2",
                   isActive && "bg-muted text-primary"
                 )}
               >
-                <LinkIcon className="w-5 h-5" />
+                <LinkIcon className={cn("text-[#A2A2AB] !w-6 !h-16", isActive && "text-orange-600")} />
                 Links
               </Button>
             )}
