@@ -1,9 +1,9 @@
 // import { createHashRouter } from "react-router-dom";
 import { createBrowserRouter ,Navigate} from "react-router-dom";
-import Posts from "../views/Posts";
 import Layout from "../components/layouts/UserLayout";
 import { Dashboard } from "../views/Dashboard";
 import { Categories } from "../views/Categories";
+import Posts from "../views/Posts";
 
 const router = createBrowserRouter([
   {
@@ -15,11 +15,11 @@ const router = createBrowserRouter([
         element: <Posts/>,
       },
       {
-        path: "/",
+        path: "",
         element: <Dashboard/>,
       },
       {
-        path: "categories",
+        path: "/categories",
         element: <Categories />,
       },
       {

@@ -51,7 +51,7 @@ const Sidebar = () => {
       <Collapsible open={shopOpen} onOpenChange={setShopOpen}>
         <CollapsibleTrigger asChild>
           <Button
-            variant="ghost"
+            variant="secondary"
             className="text-[#3F3F46] w-full justify-between px-4 py-2 rounded-lg"
           >
             <span className="flex items-center gap-3">Shop</span>
@@ -66,9 +66,9 @@ const Sidebar = () => {
           <NavLink to="/products">
             {({ isActive }) => (
               <Button
-                variant="ghost"
+                variant="secondary"
                 className={cn(
-                  "text-[#3F3F46] w-full justify-start px-4 py-2",
+                  "text-[#3F3F46] w-full justify-start px-4 py-1",
                   isActive && "bg-muted text-primary"
                 )}
               >
@@ -80,9 +80,9 @@ const Sidebar = () => {
           <NavLink to="/orders">
             {({ isActive }) => (
               <Button
-                variant="ghost"
+                variant="secondary"
                 className={cn(
-                  "text-[#3F3F46] w-full justify-start px-4 py-2",
+                  "text-[#3F3F46] w-full justify-start px-4 py-1",
                   isActive && "bg-muted text-primary"
                 )}
               >
@@ -97,9 +97,9 @@ const Sidebar = () => {
           <NavLink to="/customers">
             {({ isActive }) => (
               <Button
-                variant="ghost"
+                variant="secondary"
                 className={cn(
-                  "text-[#3F3F46] w-full justify-start px-4 py-2",
+                  "text-[#3F3F46] w-full justify-start px-4 py-1",
                   isActive && "bg-muted text-primary"
                 )}
               >
@@ -115,7 +115,7 @@ const Sidebar = () => {
       <Collapsible open={blogOpen} onOpenChange={setBlogOpen}>
         <CollapsibleTrigger asChild>
           <Button
-            variant="ghost"
+            variant="secondary"
             className="text-[#3F3F46] w-full justify-between px-4 py-2 mt-3 rounded-lg"
           > 
             <span className="flex items-center gap-3">
@@ -133,9 +133,9 @@ const Sidebar = () => {
           <NavLink to="/posts">
           {({ isActive }) => (
               <Button
-                variant="ghost"
+                variant="secondary"
                 className={cn(
-                  "text-[#3F3F46] w-full justify-start px-4 py-2",
+                  "text-[#3F3F46] w-full justify-start px-4 py-1",
                   isActive && "bg-orange-50 text-orange-600"
                 )}
               >
@@ -147,9 +147,9 @@ const Sidebar = () => {
           <NavLink to="/categories">
           {({ isActive }) => (
               <Button
-                variant="ghost"
+                variant="secondary"
                 className={cn(
-                  "text-[#3F3F46] w-full justify-start px-4 py-2",
+                  "text-[#3F3F46] w-full justify-start px-4 py-1",
                   isActive && "bg-orange-50 text-orange-600"
                 )}
               >
@@ -161,9 +161,9 @@ const Sidebar = () => {
           <NavLink to="/authors">
             {({ isActive }) => (
               <Button
-                variant="ghost"
+                variant="secondary"
                 className={cn(
-                  "text-[#3F3F46] w-full justify-start px-4 py-2",
+                  "text-[#3F3F46] w-full justify-start px-4 py-1",
                   isActive && "bg-muted text-primary"
                 )}
               >
@@ -175,7 +175,7 @@ const Sidebar = () => {
           <NavLink to="/links">
             {({ isActive }) => (
               <Button
-                variant="ghost"
+                variant="secondary "
                 className={cn(
                   "text-[#3F3F46] w-full justify-start px-4 py-2",
                   isActive && "bg-muted text-primary"

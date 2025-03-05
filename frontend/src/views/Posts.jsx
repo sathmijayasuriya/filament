@@ -1,11 +1,15 @@
-import Breadcrumbs from "@/components/layouts/Breadcrumbs";
-import PostTable from "@/components/posts/PostTable";
-import Layout from "../components/layouts/UserLayout";
-export default function Posts() {
+import React from 'react';
+import Logo from "@/assets/logo.png";
+// import postTable from "@components/posts/postTable";
+import PostHeader from '../components/posts/PostHeader';
+import PostsTable from '../components/posts/PostsTable';
+const Posts = () => {
   return (
-    <Layout>
-      <Breadcrumbs items={[{ label: "Posts", path: "/posts" }]} />
-      <PostTable />
-    </Layout>
+    <div className="m-1 mx-40"> 
+      <PostHeader/>
+      <PostsTable/>
+    </div>
   );
-}
+};
+
+export default Posts;
