@@ -14,6 +14,14 @@ import { Popover, PopoverContent,PopoverTrigger,} from "@/components/ui/popover"
 import {Menubar,MenubarContent,MenubarItem,MenubarMenu,MenubarSeparator,MenubarShortcut,MenubarTrigger,} from "@/components/ui/menubar"
 import { NavLink } from "react-router-dom";  
 import DeleteMessageDialog from "./DeleteMessageDialog";
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableRow,
+  TableCell,
+  TableFooter,
+} from "@/components/ui/table";
 
 // Sample data (replace with your actual data)
 const data = [
@@ -351,48 +359,37 @@ const PostsTable = () => {
             </div>
           )}
         </div>
-        <table className="w-full">
-          <thead className="border-b">
-            {table.getHeaderGroups().map((headerGroup) => (
-              <tr key={headerGroup.id}>
-                {headerGroup.headers.map((header) => (
-                  <th
-                    key={header.id}
-                    className="px-4 py-2 text-left font-medium"
-                  >
-                    {header.isPlaceholder
-                      ? null
-                      : flexRender(
-                          header.column.columnDef.header,
-                          header.getContext()
-                        )}
-                  </th>
-                ))}
-              </tr>
-            ))}
-          </thead>
-          <tbody>
-            {table.getRowModel().rows.map((row) => (
-              <tr
-                key={row.id}
-                className={`hover:bg-gray-100 ${
-                  row.getIsSelected() ? "border-l-2 border-orange-400" : ""
-                }`}
-              >
-                {row.getVisibleCells().map((cell, index, array) => (
-                  <td
-                    key={cell.id}
-                    className={`pl-6 px-4 py-6 text-left ${
-                      index < array.length - 1 ? "border-b" : ""
-                    }`}
-                  >
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                  </td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <Table>
+        <thead className="border-b">
+          {table.getHeaderGroups().map((headerGroup) => (
+            <TableRow key={headerGroup.id}>
+              {headerGroup.headers.map((header) => (
+                <TableCell key={header.id} className="px-4 py-2 text-left font-medium">
+                  {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
+                </TableCell>
+              ))}
+            </TableRow>
+          ))}
+        </thead>
+        <TableBody>
+          {table.getRowModel().rows.map((row) => (
+            <TableRow
+              key={row.id}
+              className={`hover:bg-gray-100 ${row.getIsSelected() ? "border-l-2 border-orange-400" : ""}`}
+            >
+              {row.getVisibleCells().map((cell, index, array) => (
+                <TableCell
+                  key={cell.id}
+                  className={` px-4 py-6 text-left ${index < array.length - 1 ? "border-b" : ""}`}
+                >
+                  {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                </TableCell>
+              ))}
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+
         <DeleteMessageDialog
         open={deleteDialogOpen}
         onOpenChange={setDeleteDialogOpen}
@@ -432,7 +429,7 @@ const PostsTable = () => {
             </SelectContent>
           </Select>
           {/* 3 */}
-          <div className="w-auto">
+          <div className="w-auto bgcolor-none">
             <Pagination
               onPageChange={(page) => table.setPageIndex(page - 1)}
               currentPage={table.getState().pagination.pageIndex + 1}
