@@ -212,6 +212,17 @@ const PostsTable = () => {
     return true;
   });
 
+  //row count 
+  const selectedRowCount = Object.keys(rowSelection).length;
+  const hasSelectedRows = selectedRowCount > 0;
+
+  const handleSelectAll = () => {
+    table.toggleAllPageRowsSelected(true);
+  };
+
+  const handleDeselectAll = () => {
+    table.toggleAllPageRowsSelected(false);
+  };
 
   return (
     <div className="p-4">
@@ -280,20 +291,34 @@ const PostsTable = () => {
             </Menubar>
             <ViewColumnsIcon className="text-[#A2A2AB] h-6 w-6 hover:text-gray-500" />
           </div>
-
-          <div className="border-t">
-            <div className="flex justify-between items-center mx-3 py-1 my-3 space-x-2">
-              <span className="text-gray-600 font-semibold">50 records selected</span>
-              <div>
-                <Button className="text-orange-500" variant="link" size="sm">
-                  Select all
-                </Button>
-                <Button className="text-red-500" variant="link" size="sm">
-                  Deselect all
-                </Button>
+          {/*row count */}
+          {hasSelectedRows && (
+            <div className="border-t">
+              <div className="flex justify-between items-center mx-3 py-1 my-3 space-x-2">
+                <span className="text-gray-600 font-semibold">
+                  {selectedRowCount} records selected
+                </span>
+                <div>
+                  <Button
+                    className="text-orange-500"
+                    variant="link"
+                    size="sm"
+                    onClick={handleSelectAll}
+                  >
+                    Select all
+                  </Button>
+                  <Button
+                    className="text-red-500"
+                    variant="link"
+                    size="sm"
+                    onClick={handleDeselectAll}
+                  >
+                    Deselect all
+                  </Button>
+                </div>
               </div>
             </div>
-          </div>
+          )}
         </div>
         <table className="w-full">
           <thead className="border-b">
@@ -317,9 +342,19 @@ const PostsTable = () => {
           </thead>
           <tbody>
             {table.getRowModel().rows.map((row) => (
-              <tr key={row.id} className="border-b hover:bg-gray-100 ">
-                {row.getVisibleCells().map((cell) => (
-                  <td key={cell.id} className="pl-6 px-4 py-6  text-left">
+              <tr
+                key={row.id}
+                className={`hover:bg-gray-100 ${
+                  row.getIsSelected() ? "border-l-2 border-orange-400" : ""
+                }`}
+              >
+                {row.getVisibleCells().map((cell, index, array) => (
+                  <td
+                    key={cell.id}
+                    className={`pl-6 px-4 py-6 text-left ${
+                      index < array.length - 1 ? "border-b" : ""
+                    }`}
+                  >
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
                   </td>
                 ))}

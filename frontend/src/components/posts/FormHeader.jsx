@@ -9,7 +9,6 @@ import {
 export default function FormHeader() {
   return (
     <div className="p-6">
-      {/* Breadcrumb Navigation */}
       <Breadcrumb>
         <BreadcrumbItem>
           <BreadcrumbLink href="/posts">Posts</BreadcrumbLink>
@@ -22,8 +21,6 @@ export default function FormHeader() {
       <div className="flex justify-between items-center mt-4">
         <h2 className="text-2xl font-bold">Create Post </h2>
       </div>
-
-      {/* post table */}
     </div>
   );
 }

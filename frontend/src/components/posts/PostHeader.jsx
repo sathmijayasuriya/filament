@@ -10,7 +10,6 @@ import { Link } from "react-router-dom";
 export default function PostHeader() {
   return (
     <div className="p-6">
-      {/* Breadcrumb Navigation */}
       <Breadcrumb>
         <BreadcrumbItem>
           <BreadcrumbLink href="/posts">Posts</BreadcrumbLink>
@@ -28,8 +27,6 @@ export default function PostHeader() {
           </Button>
         </Link>
       </div>
-
-      {/* post table */}
     </div>
   );
 }
