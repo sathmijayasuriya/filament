@@ -6,6 +6,7 @@ import { Categories } from "../views/Categories";
 // import {PostsCreate} from "../views/PostsCreate";
 import Posts from "../views/Posts";
 import PostsCreate from "../views/PostsCreate";
+import ViewPost from "../views/ViewPost";
 
 const router = createBrowserRouter([
   {
@@ -27,6 +28,10 @@ const router = createBrowserRouter([
       {
         path: "/posts/create",
         element: <PostsCreate/>,
+      },
+      {
+        path: "/posts/:id",
+        element: <ViewPost />,
       },
       {
         path: "*",
