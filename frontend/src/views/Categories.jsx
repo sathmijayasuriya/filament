@@ -1,7 +1,12 @@
 import React from 'react'
+import CategoryHeader from '../components/categories/CategoryHeader';
 
-export const Categories = () => {
+ const Categories = () => {
   return (
-    <div>Categories</div>
+    <div className="m-1 mx-40"> 
+      <CategoryHeader/>
+    </div>
   )
 }
+
+export default Categories;

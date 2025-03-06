@@ -2,8 +2,7 @@
 import { createBrowserRouter ,Navigate} from "react-router-dom";
 import Layout from "../components/layouts/UserLayout";
 import { Dashboard } from "../views/Dashboard";
-import { Categories } from "../views/Categories";
-// import {PostsCreate} from "../views/PostsCreate";
+import Categories  from "../views/Categories";
 import Posts from "../views/Posts";
 import PostsCreate from "../views/PostsCreate";
 import ViewPost from "../views/ViewPost";

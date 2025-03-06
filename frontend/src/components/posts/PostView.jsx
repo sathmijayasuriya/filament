@@ -10,7 +10,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableRow, TableCell } from "@/components/ui/table";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
-import { AspectRatio } from "@/components/ui/aspect-ratio";
 import Book from "@/assets/book.png";
 
 export default function PostView() {

@@ -13,6 +13,7 @@ import { CalendarIcon } from "lucide-react"
 import { Popover, PopoverContent,PopoverTrigger,} from "@/components/ui/popover"
 import {Menubar,MenubarContent,MenubarItem,MenubarMenu,MenubarSeparator,MenubarShortcut,MenubarTrigger,} from "@/components/ui/menubar"
 import { NavLink } from "react-router-dom";  
+import DeleteMessageDialog from "./DeleteMessageDialog";
 
 // Sample data (replace with your actual data)
 const data = [
@@ -74,41 +75,71 @@ const PostsTable = () => {
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
 
+  //delete 
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [selectedRowId, setSelectedRowId] = useState(null);
+  const handleDeleteClick = (rowId) => {
+    setSelectedRowId(rowId);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleConfirmDelete = () => {
+    // Perform delete action here using selectedRowId
+    console.log("Deleting row with ID:", selectedRowId);
+    setDeleteDialogOpen(false);
+    setSelectedRowId(null);
+  };
+
+  const handleCancelDelete = () => {
+    setDeleteDialogOpen(false);
+    setSelectedRowId(null);
+  };
+
+
   const columns = [
     {
-        id: "select",
-        header: ({ table }) => (
-            <div className="flex items-center justify-center"> {/* added flex items center justify center */}
-                <Checkbox
-                    checked={
-                        table.getIsAllPageRowsSelected() ||
-                        (table.getIsSomePageRowsSelected() && "indeterminate")
-                    }
-                    onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-                    aria-label="Select all rows"
-                />
-            </div>
-        ),
-        cell: ({ row }) => (
-            <div className="flex items-center justify-center"> {/* added flex items center justify center */}
-                <Checkbox
-                    checked={row.getIsSelected()}
-                    onCheckedChange={(value) => row.toggleSelected(!!value)}
-                    aria-label="Select row"
-                />
-            </div>
-        ),
-        enableSorting: false,
-        enableHiding: false,
+      id: "select",
+      header: ({ table }) => (
+        <div className="flex items-center justify-center">
+          {" "}
+          {/* added flex items center justify center */}
+          <Checkbox
+            checked={
+              table.getIsAllPageRowsSelected() ||
+              (table.getIsSomePageRowsSelected() && "indeterminate")
+            }
+            onCheckedChange={(value) =>
+              table.toggleAllPageRowsSelected(!!value)
+            }
+            aria-label="Select all rows"
+          />
+        </div>
+      ),
+      cell: ({ row }) => (
+        <div className="flex items-center justify-center">
+          {" "}
+          {/* added flex items center justify center */}
+          <Checkbox
+            checked={row.getIsSelected()}
+            onCheckedChange={(value) => row.toggleSelected(!!value)}
+            aria-label="Select row"
+          />
+        </div>
+      ),
+      enableSorting: false,
+      enableHiding: false,
     },
     {
       accessorKey: "image",
       header: "Image",
-      cell: ({ row }) => (
+      cell: ({ row }) =>
         row.original.image ? (
-          <img src={row.original.image} alt="Post" className="h-8 w-8 rounded" />
-        ) : null
-      ),
+          <img
+            src={row.original.image}
+            alt="Post"
+            className="h-8 w-8 rounded"
+          />
+        ) : null,
     },
     {
       accessorKey: "title",
@@ -123,33 +154,29 @@ const PostsTable = () => {
           </Button>
         );
       },
-    },    
+    },
     {
-        accessorKey: "status",
-        header: ({ column }) => {
-            return (
-                <Button
-                    variant="ghost"
-                    onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-                >
-                    Status
-                    <ArrowUpDown className="h-4 w-4" />
-                </Button>
-            );
-        },
-        cell: ({ row }) => {
-            const status = row.original.status;
-            let badgeColor = "bg-green-100 text-green-800 border-green-200"; 
-            
-            if (status === "Draft") {
-                badgeColor = "bg-orange-100 text-orange-800 border-orange-200";
-            }
-            return (
-                <Badge className={`${badgeColor}`}>
-                    {status}
-                </Badge>
-            );
-        },
+      accessorKey: "status",
+      header: ({ column }) => {
+        return (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            Status
+            <ArrowUpDown className="h-4 w-4" />
+          </Button>
+        );
+      },
+      cell: ({ row }) => {
+        const status = row.original.status;
+        let badgeColor = "bg-green-100 text-green-800 border-green-200";
+
+        if (status === "Draft") {
+          badgeColor = "bg-orange-100 text-orange-800 border-orange-200";
+        }
+        return <Badge className={`${badgeColor}`}>{status}</Badge>;
+      },
     },
     {
       accessorKey: "publishedDate",
@@ -169,21 +196,24 @@ const PostsTable = () => {
       id: "actions",
       header: "",
       cell: ({ row }) => (
-            <div className="flex space-x-2">
-            <div className="flex items-center space-x-[-10px]">
-                <EyeIcon className="text-[#A2A2AB] h-4 w-4" />
-                <Button variant="link" size="sm">View</Button>
-            </div>
-            <div className="flex items-center space-x-[-10px]">
-                <PencilSquareIcon className="text-orange-500 h-4 w-4"/> 
-                <Button className="text-orange-500" variant="link" size="sm">Edit</Button>
-            </div>
-            <div className="flex items-center space-x-[-10px]">
-                <TrashIcon className="text-red-500 h-4 w-4" />          
-                <Button  className="text-red-500" variant="link" size="sm">Delete</Button>
-            </div>
-            </div>
-
+        <div className="flex space-x-2">
+          <div className="flex items-center space-x-[-10px]">
+            <EyeIcon className="text-[#A2A2AB] h-4 w-4" />
+            <Button variant="link" size="sm">
+              View
+            </Button>
+          </div>
+          <div className="flex items-center space-x-[-10px]">
+            <PencilSquareIcon className="text-orange-500 h-4 w-4" />
+            <Button className="text-orange-500" variant="link" size="sm">
+              Edit
+            </Button>
+          </div>
+          <div className="flex items-center space-x-[-10px]">
+            <TrashIcon className="text-red-500 h-4 w-4" />
+            <Button  className="text-red-500" variant="link" size="sm" onClick={() => handleDeleteClick(row.original.id)}>Delete</Button>
+          </div>
+        </div>
       ),
     },
   ];
@@ -363,6 +393,13 @@ const PostsTable = () => {
             ))}
           </tbody>
         </table>
+        <DeleteMessageDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        onConfirm={handleConfirmDelete}
+        onCancel={handleCancelDelete}
+      />
+
         <div className="flex justify-between items-center  py-1 my-3 mx-5 ">
           {/* 1 */}
           <div>

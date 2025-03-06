@@ -15,7 +15,7 @@ export default function Header() {
   // const [searchValue, setSearchValue] = useState("");
 
   return (
-    <header className="flex items-center justify-between px-6 py-1 border-b bg-white">
+    <header className="flex items-center justify-between py-1 border-b bg-white px-7">
       {/* Logo fliament */}
       <img src={Logo} alt="Logo" className="h-13 cursor-pointer" />
       <div className="flex items-center w-2/3 justify-end gap-4">
