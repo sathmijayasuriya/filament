@@ -374,14 +374,15 @@ const PostsTable = () => {
         <TableBody>
           {table.getRowModel().rows.map((row) => (
             <TableRow
+              noBorder = {true}
               key={row.id}
               className={`hover:bg-gray-100 ${row.getIsSelected() ? "border-l-2 border-orange-400" : ""}`}
             >
-              {row.getVisibleCells().map((cell, index, array) => (
+              {row.getVisibleCells().map((cell,) => (
                 <TableCell
-                  key={cell.id}
-                  className={` px-4 py-6 text-left ${index < array.length - 1 ? "border-b" : ""}`}
-                >
+                key={cell.id}
+                className="px-4 py-6 text-left"
+                      >
                   {flexRender(cell.column.columnDef.cell, cell.getContext())}
                 </TableCell>
               ))}

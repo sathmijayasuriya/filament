@@ -6,15 +6,12 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 
-export default function CreateCategoryDialog() {
+export default function CreateCategoryDialog({open, onOpenChange, onConfirm, onCancel }) {
   const [isVisible, setIsVisible] = useState(true);
   
   return (
-    <Dialog>
-      <DialogTrigger asChild>
-        <Button variant="outline">Add Category</Button>
-      </DialogTrigger>
-      <DialogContent className="sm:max-w-lg">
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle>Create Category</DialogTitle>
         </DialogHeader>
@@ -38,9 +35,9 @@ export default function CreateCategoryDialog() {
             <Label htmlFor="visibility">Visible to customers.</Label>
           </div>
           <div className="flex justify-end gap-2">
-            <Button variant="outline">Cancel</Button>
+            <Button variant="outline" onClick={onCancel}>Cancel</Button>
             <Button variant="secondary">Create & create another</Button>
-            <Button>Create</Button>
+            <Button onClick={onConfirm} >Create</Button>
           </div>
         </div>
       </DialogContent>

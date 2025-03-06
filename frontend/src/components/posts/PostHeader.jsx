@@ -20,7 +20,7 @@ export default function PostHeader() {
         </BreadcrumbItem>
       </Breadcrumb>
       <div className="flex justify-between items-center mt-4">
-        <h2 className="text-2xl font-bold">Posts</h2>
+        <h2 className="text-3xl font-bold">Posts</h2>
         <Link to="/posts/create">
           <Button className="bg-orange-400 hover:bg-orange-500 text-white">
             New post

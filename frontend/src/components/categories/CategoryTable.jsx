@@ -89,7 +89,9 @@ const CategoryTable = () => {
       setDeleteDialogOpen(false);
       setSelectedRowId(null);
     };
-    
+
+  
+
   return (
     <div className="p-4">
       <div className="rounded-md border bg-white">
@@ -122,7 +124,9 @@ const CategoryTable = () => {
           </TableHeader>
           <TableBody>
             {pageData.map((item) => (
-              <TableRow key={item.slug}>
+              <TableRow key={item.slug} 
+              noBorder = {true}
+              className={`hover:bg-gray-100 ${selectedRows.includes(item.slug) ? "border-l-2 border-orange-400" : ""}`}>
                 <TableCell>
                   <div className="ml-10">
                     <Checkbox
