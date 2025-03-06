@@ -4,7 +4,7 @@ import { EyeIcon, PencilSquareIcon, ChatBubbleLeftEllipsisIcon } from "@heroicon
 
 const MenuBarComponent = () => {
   return (
-    <div className="flex justify-center h-screen mt-4">
+    <div className="flex justify-center my-4">
       <Menubar className="flex gap-4 border-1 border-gray-300 rounded-lg px-3 py-7 bg-white">
         <MenubarMenu>
           <NavLink
