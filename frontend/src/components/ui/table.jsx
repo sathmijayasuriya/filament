@@ -52,21 +52,20 @@ function TableFooter({
   );
 }
 
-function TableRow({
-  className,
-  ...props
-}) {
+//border border-b
+function TableRow({ className, noBorder, ...props }) {
   return (
     <tr
       data-slot="table-row"
       className={cn(
-        "hover:bg-muted/50 data-[state=selected]:bg-muted border-b transition-colors",
+        "hover:bg-muted/50 data-[state=selected]:bg-muted transition-colors",
+        noBorder ? "" : "border-b", // Conditionally apply border-b
         className
       )}
-      {...props} />
+      {...props}
+    />
   );
 }
-
 function TableHead({
   className,
   ...props

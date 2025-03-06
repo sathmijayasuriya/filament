@@ -12,7 +12,8 @@ import { Calendar } from "@/components/ui/calendar";
 import { CalendarIcon } from "lucide-react"
 import { Popover, PopoverContent,PopoverTrigger,} from "@/components/ui/popover"
 import {Menubar,MenubarContent,MenubarItem,MenubarMenu,MenubarSeparator,MenubarShortcut,MenubarTrigger,} from "@/components/ui/menubar"
-   
+import { NavLink } from "react-router-dom";  
+
 // Sample data (replace with your actual data)
 const data = [
   {
@@ -226,7 +227,7 @@ const PostsTable = () => {
 
   return (
     <div className="p-4">
-      <div className="rounded-md border">
+      <div className="rounded-md border bg-white">
         <div className=" border-b">
           <div className="flex justify-end items-center py-1 my-3 mx-5 space-x-2 ">
             <Input placeholder="Search" className="w-[300px]" />

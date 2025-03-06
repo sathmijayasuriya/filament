@@ -48,7 +48,7 @@ const PostForm = () => {
 
   return (
     <form onSubmit={handleSubmit}>
-      <div className="w-full p-5 rounded-lg border">
+      <div className="w-full p-5 rounded-lg border bg-white">
         <div className="grid grid-cols-2 gap-4 mt-4">
           <div>
             <Label className="mb-3" htmlFor="title">
@@ -136,7 +136,7 @@ const PostForm = () => {
         </div>
       </div>
       {/* 2 section */}
-      <div className="w-full p-5 mt-7 rounded-lg border">
+      <div className= " bg-white w-full p-5 mt-7 rounded-lg border">
         <Label className="mb-3" htmlFor="image">
           Image
         </Label>
