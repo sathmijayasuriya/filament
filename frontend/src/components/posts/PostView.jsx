@@ -13,7 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { useParams } from 'react-router-dom'; // Assuming you're using React Router
 import { getStorage, ref, getDownloadURL } from "firebase/storage";
 import { app } from '../../firebase';
-
+import MenuBarComponent from './PostViewMenu';
 export default function PostView() {
   const { slug } = useParams(); // Get the slug from the URL
   const [post, setPost] = useState(null);
@@ -76,7 +76,7 @@ export default function PostView() {
         <div className="flex justify-between items-center mt-4">
           <h2 className="text-2xl font-bold">{post.title}</h2>
         </div>
-        <PostViewMenu />
+        <MenuBarComponent slug={slug} />
       </div>
       <div className="flex justify-center items-center ">
         <div className="w-full">

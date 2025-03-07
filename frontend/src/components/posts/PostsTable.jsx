@@ -26,6 +26,8 @@ import { app } from "../../firebase";
 import { useNavigate } from "react-router-dom"; // Import useNavigate
 
 const PostsTable = () => {
+
+  
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -70,7 +72,7 @@ const PostsTable = () => {
   };
   
   const handlePostDeleted = () => {
-      // Refresh your post data here
+    // Refresh your post data here
       fetch("http://localhost:5000/api/posts/posts")
           .then((response) => response.json())
           .then((result) => setData(result));
@@ -82,6 +84,8 @@ const PostsTable = () => {
     setDeleteDialogOpen(false);
     selectedPostSlug(null);
   };
+
+  //edit
 
   const columns = [
     {
@@ -224,7 +228,13 @@ const PostsTable = () => {
           </div>
           <div className="flex items-center space-x-[-10px]">
             <PencilSquareIcon className="text-orange-500 h-4 w-4" />
-            <Button className="text-orange-500" variant="link" size="sm">
+            <PencilSquareIcon className="text-orange-500 h-4 w-4" />
+            <Button
+              className="text-orange-500"
+              variant="link"
+              size="sm"
+              onClick={() => navigate(`/posts/edit/${row.original.slug}`)} // Navigate to the edit page
+            >
               Edit
             </Button>
           </div>
