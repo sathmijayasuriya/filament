@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
   EyeIcon,
@@ -32,19 +32,32 @@ import {
 } from "@/components/ui/select";
 import DeleteMessageDialog from "../posts/DeleteMessageDialog";
 import ViewCategoryDialog from "./ViewCategoryDialog";
-const data = [
-  { name: "Category 1", slug: "category-1", visibility: true, lastUpdated: "Nov 1, 2024" },
-  { name: "Category 2", slug: "category-2", visibility: false, lastUpdated: "Oct 25, 2024" },
-  { name: "Category 3", slug: "category-3", visibility: false, lastUpdated: "Oct 12, 2024" },
-  { name: "Category 4", slug: "category-4", visibility: false, lastUpdated: "Jan 26, 2025" },
-  { name: "Category 5", slug: "category-5", visibility: false, lastUpdated: "Mar 3, 2025" },
-];
+import { format } from 'date-fns'; // Import the format function from date-fns
 
 const CategoryTable = () => {
+  const [data, setData] = useState([]);
   const [page, setPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(5);
   const [selectedRows, setSelectedRows] = useState([]);
   const [selectAll, setSelectAll] = useState(false);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await fetch("http://localhost:5000/api/categories");
+        if (response.ok) {
+          const result = await response.json();
+          setData(result);
+        } else {
+          console.error("Failed to fetch categories");
+        }
+      } catch (error) {
+        console.error("Error fetching categories:", error);
+      }
+    };
+
+    fetchData();
+  }, []);
 
   const totalPages = Math.ceil(data.length / rowsPerPage);
   const start = (page - 1) * rowsPerPage;
@@ -70,41 +83,40 @@ const CategoryTable = () => {
   };
 
   //delete
-    const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-    const [selectedRowId, setSelectedRowId] = useState(null);
-    const handleDeleteClick = (rowId) => {
-      setSelectedRowId(rowId);
-      setDeleteDialogOpen(true);
-    };
-  
-    const handleConfirmDelete = () => {
-      console.log("Deleting row with ID:", selectedRowId);
-      setDeleteDialogOpen(false);
-      setSelectedRowId(null);
-    };
-  
-    const handleCancelDelete = () => {
-      setDeleteDialogOpen(false);
-      setSelectedRowId(null);
-    };
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [selectedRowId, setSelectedRowId] = useState(null);
+  const handleDeleteClick = (rowId) => {
+    setSelectedRowId(rowId);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleConfirmDelete = () => {
+    console.log("Deleting row with ID:", selectedRowId);
+    setDeleteDialogOpen(false);
+    setSelectedRowId(null);
+  };
+
+  const handleCancelDelete = () => {
+    setDeleteDialogOpen(false);
+    setSelectedRowId(null);
+  };
 
   //view
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
-  const [selectedCategory, setSelectedCategory] = useState(null); 
+  const [selectedCategory, setSelectedCategory] = useState(null);
 
   const handleViewClick = (rowId) => {
     setSelectedRowId(rowId);
-    const category = data.find((item) => item.slug === rowId); 
-    setSelectedCategory(category); // Set the category state
+    const category = data.find((item) => item.slug === rowId);
+    setSelectedCategory(category);
     setViewDialogOpen(true);
   };
 
   const handleCloseView = () => {
     setViewDialogOpen(false);
     setSelectedRowId(null);
-    setSelectedCategory(null); // Clear the category state
+    setSelectedCategory(null);
   };
-
 
   return (
     <div className="p-4">
@@ -190,7 +202,7 @@ const CategoryTable = () => {
                     </span>
                   )}
                 </TableCell>
-                <TableCell>{item.lastUpdated}</TableCell>
+                <TableCell>{format(new Date(item.updated_at), 'yyyy-MM-dd')}</TableCell>
                 <TableCell className="flex space-x-2">
                   <div className="flex space-x-2">
                     <div className="flex items-center space-x-[-10px]">
@@ -273,6 +285,7 @@ const CategoryTable = () => {
           open={viewDialogOpen}
           onOpenChange={setViewDialogOpen}
           category={selectedCategory} // Pass the category data
+          onClose={handleCloseView} // Pass the handleCloseView function
         />
       </div>
     </div>

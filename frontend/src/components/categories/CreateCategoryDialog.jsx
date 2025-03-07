@@ -17,10 +17,60 @@ import {
   Redo,
 } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
+import { toast } from "react-hot-toast"; // Import toast for notifications
+import { useNavigate } from "react-router-dom"; // Import useNavigate
+
 
 export default function CreateCategoryDialog({ open, onOpenChange, onConfirm, onCancel }) {
   const [isVisible, setIsVisible] = useState(true);
   const [description, setDescription] = useState("");
+  const [name, setName] = useState(""); // State for category name
+  const [slug, setSlug] = useState(""); // State for category slug
+  const navigate = useNavigate(); // Initialize navigate
+
+    // Update slug when name changes
+    const handleNameChange = (e) => {
+      setName(e.target.value);
+      setSlug(e.target.value.toLowerCase().replace(/\s+/g, "-"));
+    };
+
+    const handleSubmit = async () => {
+      if (!name) {
+        toast.error("Please enter a category name.");
+        return;
+      }
+  
+      try {
+        const response = await fetch("http://localhost:5000/api/categories/create", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            name,
+            slug,
+            visibility: isVisible ? 1 : 0, 
+            description,
+          }),
+        });
+  
+        if (response.ok) {
+          toast.success("Category created successfully!");
+          onConfirm(); // Close the dialog or perform other actions
+          setName("");
+          setSlug("");
+          setIsVisible(true);
+          setDescription("");
+          navigate("/categories"); 
+        } else {
+          const errorData = await response.json();
+          toast.error(errorData.error || "Failed to create category.");
+        }
+      } catch (error) {
+        console.error("Error creating category:", error);
+        toast.error("An error occurred while creating the category.");
+      }
+    };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -34,11 +84,23 @@ export default function CreateCategoryDialog({ open, onOpenChange, onConfirm, on
               <Label htmlFor="name">
                 Name <span className="text-red-500">*</span>
               </Label>
-              <Input id="name" placeholder="Enter category name" className="mt-1" />
+              <Input
+                id="name"
+                placeholder="Enter category name"
+                className="mt-1"
+                value={name}
+                onChange={handleNameChange} // Call handleNameChange on name input change
+              />
             </div>
             <div>
               <Label htmlFor="slug">Slug</Label>
-              <Input id="slug" placeholder="Auto-generated" className="mt-1" disabled />
+              <Input
+                id="slug"
+                placeholder="Auto-generated"
+                className="mt-1"
+                disabled
+                value={slug} // Set the value of the slug input
+              />
             </div>
           </div>
           <div>
@@ -93,7 +155,7 @@ export default function CreateCategoryDialog({ open, onOpenChange, onConfirm, on
             <Button
               className="bg-orange-400 hover:bg-orange-500 text-white"
               variant="primary"
-              onClick={onConfirm}
+              onClick={handleSubmit} 
             >
               Create
             </Button>

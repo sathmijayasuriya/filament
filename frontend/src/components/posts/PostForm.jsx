@@ -19,6 +19,8 @@ import { toast } from "react-hot-toast";
 import { getStorage, ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
 import { app } from "../../firebase";
 import ImageUpload from "./ImageUpload ";
+import { useNavigate } from 'react-router-dom'; // Import useNavigate
+
 
 const PostForm = () => {
   const [title, setTitle] = useState("");
@@ -31,6 +33,8 @@ const PostForm = () => {
   const [image, setImage] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState(null);
+
+  const navigate = useNavigate();
 
   // Fetch categories from backend
   useEffect(() => {
@@ -142,6 +146,7 @@ const PostForm = () => {
         setPublishedDate(null);
         setTags("");
         setImage(null);
+        navigate('/posts'); 
       } else {
         setError(responseData.error || "Failed to create post");
         toast.error(responseData.error || "Failed to create post");
