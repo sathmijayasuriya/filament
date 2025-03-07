@@ -35,6 +35,7 @@ import ViewCategoryDialog from "./ViewCategoryDialog";
 import { format } from 'date-fns'; // Import the format function from date-fns
 import axios from 'axios'; // Import axios
 import { useNavigate } from 'react-router-dom';
+import EditCategoryDialog from "./EditCategoryDialog";
 
 const CategoryTable = ({categoryCreated }) => {
   const [data, setData] = useState([]);
@@ -135,6 +136,9 @@ const handleCloseView = () => {
     setViewDialogOpen(false);
     setSelectedCategory(null); // Reset selectedCategory
 };
+//edit
+const [editDialogOpen, setEditDialogOpen] = useState(false);
+const [selectedCategoryToEdit, setSelectedCategoryToEdit] = useState(null);
 
 
   return (
@@ -221,7 +225,9 @@ const handleCloseView = () => {
                     </span>
                   )}
                 </TableCell>
-                <TableCell>{format(new Date(item.updated_at), 'yyyy-MM-dd')}</TableCell>
+                <TableCell>
+                  {format(new Date(item.updated_at), "yyyy-MM-dd")}
+                </TableCell>
                 <TableCell className="flex space-x-2">
                   <div className="flex space-x-2">
                     <div className="flex items-center space-x-[-10px]">
@@ -241,6 +247,10 @@ const handleCloseView = () => {
                         className="text-orange-500"
                         variant="link"
                         size="sm"
+                        onClick={() => {
+                          setSelectedCategoryToEdit(item);
+                          setEditDialogOpen(true);
+                        }}
                       >
                         Edit
                       </Button>
@@ -295,18 +305,29 @@ const handleCloseView = () => {
           </TableFooter>
         </Table>
         <DeleteMessageDialog
-            open={deleteDialogOpen}
-            onOpenChange={setDeleteDialogOpen}
-            onConfirm={handleConfirmDelete}
-            onCancel={handleCancelDelete}
-            title="Delete Category"
-            description="Are you sure you want to delete this category?"
+          open={deleteDialogOpen}
+          onOpenChange={setDeleteDialogOpen}
+          onConfirm={handleConfirmDelete}
+          onCancel={handleCancelDelete}
+          title="Delete Category"
+          description="Are you sure you want to delete this category?"
         />
         <ViewCategoryDialog
           open={viewDialogOpen}
           onOpenChange={setViewDialogOpen}
-          category={selectedCategory} 
-          onClose={handleCloseView} 
+          category={selectedCategory}
+          onClose={handleCloseView}
+        />
+        <EditCategoryDialog
+          open={editDialogOpen}
+          onOpenChange={setEditDialogOpen}
+          category={selectedCategoryToEdit}
+          onCategoryUpdated={() => {
+            // Refresh your category data here
+            fetch("http://localhost:5000/api/categories")
+              .then((response) => response.json())
+              .then((result) => setData(result));
+          }}
         />
       </div>
     </div>
