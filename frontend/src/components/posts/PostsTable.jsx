@@ -1,17 +1,17 @@
 import { Button } from "@/components/ui/button";
-import { FunnelIcon, ViewColumnsIcon, EyeIcon,PencilSquareIcon,TrashIcon} from "@heroicons/react/24/solid";
-import {Pagination,PaginationContent,PaginationEllipsis,PaginationItem,PaginationLink,PaginationNext,PaginationPrevious,} from "@/components/ui/pagination";
-import {flexRender,getCoreRowModel,getFilteredRowModel,getPaginationRowModel,getSortedRowModel,useReactTable,} from "@tanstack/react-table";
+import { FunnelIcon, ViewColumnsIcon, EyeIcon, PencilSquareIcon, TrashIcon } from "@heroicons/react/24/solid";
+import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
+import { flexRender, getCoreRowModel, getFilteredRowModel, getPaginationRowModel, getSortedRowModel, useReactTable } from "@tanstack/react-table";
 import { ArrowUpDown } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
-import {Select,SelectContent,SelectItem,SelectTrigger,SelectValue,} from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
-import { Calendar } from "@/components/ui/calendar"; 
-import { CalendarIcon } from "lucide-react"
-import { Popover, PopoverContent,PopoverTrigger,} from "@/components/ui/popover"
-import {Menubar,MenubarContent,MenubarItem,MenubarMenu,MenubarSeparator,MenubarShortcut,MenubarTrigger,} from "@/components/ui/menubar"
+import { Calendar } from "@/components/ui/calendar";
+import { CalendarIcon } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Menubar, MenubarContent, MenubarItem, MenubarMenu, MenubarSeparator, MenubarShortcut, MenubarTrigger } from "@/components/ui/menubar";
 import DeleteMessageDialog from "./DeleteMessageDialog";
 import {
   Table,
@@ -21,57 +21,33 @@ import {
   TableCell,
   TableFooter,
 } from "@/components/ui/table";
-
-// Sample data (replace with your actual data)
-const data = [
-  {
-    id: 1,
-    image: null, // You can add image URLs here
-    title: "Id voluptatibus est qui.",
-    status: "Published",
-    publishedDate: "Oct 23, 2024",
-    // commentAuthors: ["Monty Swift", "Miss Marisol Braun", "Show 7 more"],
-  },
-  {
-    id: 2,
-    image: null,
-    title: "Odit voluptates repellat saepe.",
-    status: "Published",
-    publishedDate: "Feb 3, 2025",
-    // commentAuthors: ["Carrie Crooks DDS", "Dr. Abe Mann II", "Show 7 more"],
-  },
-  {
-    id: 3,
-    image: null,
-    title: "Vel dignissimos beatae ut.",
-    status: "Draft",
-    publishedDate: "Apr 3, 2025",
-    // commentAuthors: ["Krystina Armstrong", "Krystina Armstrong", "Show 7 more"],
-  },
-  {
-    id: 4,
-    image: null,
-    title: "Ipsum est aut quae nihil.",
-    status: "Published",
-    publishedDate: "Dec 24, 2024",
-    // commentAuthors: [
-    //   "Salvatore Romaguera",
-    //   "Mr. Kristofer DuBuque DVM",
-    //   "Show 7 more",
-    // ],
-  },
-  {
-    id: 5,
-    image: null,
-    title: "Voluptatum quis enim consequatur maiores ut.",
-    status: "Draft",
-    publishedDate: "Apr 1, 2025",
-    // commentAuthors: ["Hubert Langosh", "Mr. Devyn Kilback IV", "Show 7 more"],
-  },
-  // Add more data as needed
-];
+import { getStorage, ref, getDownloadURL } from "firebase/storage";
+import { app } from "../../firebase";
 
 const PostsTable = () => {
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        const response = await fetch("http://localhost:5000/api/posts/posts");
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const result = await response.json();
+        setData(result);
+      } catch (err) {
+        setError(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
 
   const [sorting, setSorting] = useState([]);
   const [columnFilters, setColumnFilters] = useState([]);
@@ -82,26 +58,28 @@ const PostsTable = () => {
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
 
-  //delete 
+  //delete
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [selectedRowId, setSelectedRowId] = useState(null);
-  const handleDeleteClick = (rowId) => {
-    setSelectedRowId(rowId);
-    setDeleteDialogOpen(true);
+  const [selectedPostSlug, setSelectedPostSlug] = useState(null);
+  
+  const handleDeleteClick = (slug) => {
+      setSelectedPostSlug(slug);
+      setDeleteDialogOpen(true);
   };
-
+  
+  const handlePostDeleted = () => {
+      // Refresh your post data here
+      fetch("http://localhost:5000/api/posts/posts")
+          .then((response) => response.json())
+          .then((result) => setData(result));
+  };
+  
   const handleConfirmDelete = () => {
     // Perform delete action here using selectedRowId
-    console.log("Deleting row with ID:", selectedRowId);
+    console.log("Deleting row with ID:", selectedPostSlug);
     setDeleteDialogOpen(false);
-    setSelectedRowId(null);
+    selectedPostSlug(null);
   };
-
-  const handleCancelDelete = () => {
-    setDeleteDialogOpen(false);
-    setSelectedRowId(null);
-  };
-
 
   const columns = [
     {
@@ -137,16 +115,34 @@ const PostsTable = () => {
       enableHiding: false,
     },
     {
-      accessorKey: "image",
+      accessorKey: "image_path", // Use the correct column name from your MySQL table
       header: "Image",
-      cell: ({ row }) =>
-        row.original.image ? (
-          <img
-            src={row.original.image}
-            alt="Post"
-            className="h-8 w-8 rounded"
-          />
-        ) : null,
+      cell: ({ row }) => {
+        const imagePath = row.original.image_path;
+        if (imagePath) {
+          const storage = getStorage(app);
+          const imageRef = ref(storage, imagePath); // Use the image_path from your database
+          return (
+            <img
+              src={imagePath} // initially use imagepath, then after download url is fetched, it will be updated.
+              alt="Post"
+              className="h-16 w-16 rounded"
+              onLoad={(event) => {
+                  getDownloadURL(imageRef).then((url) => {
+                      event.target.src = url;
+                  }).catch((error) => {
+                      console.error("Error getting download URL:", error);
+                  });
+              }}
+              onError={(error) => {
+                  console.error("Error loading image:", error);
+              }}
+  
+            />
+          );
+        }
+        return null;
+      },
     },
     {
       accessorKey: "title",
@@ -186,7 +182,7 @@ const PostsTable = () => {
       },
     },
     {
-      accessorKey: "publishedDate",
+      accessorKey: "published_at",
       header: ({ column }) => {
         return (
           <Button
@@ -197,6 +193,15 @@ const PostsTable = () => {
             <ArrowUpDown className=" h-4 w-4" />
           </Button>
         );
+      },
+      cell: ({ row }) => {
+        if (row.original.published_at) {
+          const date = new Date(row.original.published_at);
+          // Format the date to "YYYY-MM-DD"
+          const formattedDate = date.toISOString().split('T')[0];
+          return formattedDate;
+        }
+        return "";
       },
     },
     {
@@ -218,8 +223,8 @@ const PostsTable = () => {
           </div>
           <div className="flex items-center space-x-[-10px]">
             <TrashIcon className="text-red-500 h-4 w-4" />
-            <Button  className="text-red-500" variant="link" size="sm" onClick={() => handleDeleteClick(row.original.id)}>Delete</Button>
-          </div>
+            <Button className="text-red-500" variant="link" size="sm" onClick={() => handleDeleteClick(row.original.slug)}>Delete</Button>
+            </div>
         </div>
       ),
     },
@@ -244,13 +249,16 @@ const PostsTable = () => {
     },
   });
   const filteredData = data.filter((post) => {
-    const postDate = new Date(post.publishedDate);
-    if (startDate && postDate < new Date(startDate)) return false;
-    if (endDate && postDate > new Date(endDate)) return false;
-    return true;
+    if (post.published_at) {
+      const postDate = new Date(post.published_at);
+      if (startDate && postDate < new Date(startDate)) return false;
+      if (endDate && postDate > new Date(endDate)) return false;
+      return true;
+    }
+    return true; //if no published_at, show the post.
   });
 
-  //row count 
+  //row count
   const selectedRowCount = Object.keys(rowSelection).length;
   const hasSelectedRows = selectedRowCount > 0;
 
@@ -261,6 +269,8 @@ const PostsTable = () => {
   const handleDeselectAll = () => {
     table.toggleAllPageRowsSelected(false);
   };
+  if (loading) return <div>Loading...</div>;
+  if (error) return <div>Error: {error.message}</div>;
 
   return (
     <div className="p-4">
@@ -359,43 +369,44 @@ const PostsTable = () => {
           )}
         </div>
         <Table>
-        <thead className="border-b">
-          {table.getHeaderGroups().map((headerGroup) => (
-            <TableRow key={headerGroup.id}>
-              {headerGroup.headers.map((header) => (
-                <TableCell key={header.id} className="px-4 py-2 text-left font-medium">
-                  {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
-                </TableCell>
-              ))}
-            </TableRow>
-          ))}
-        </thead>
-        <TableBody>
-          {table.getRowModel().rows.map((row) => (
-            <TableRow
-              noBorder = {true}
-              key={row.id}
-              className={`hover:bg-gray-100 ${row.getIsSelected() ? "border-l-2 border-orange-400" : ""}`}
-            >
-              {row.getVisibleCells().map((cell,) => (
-                <TableCell
-                key={cell.id}
-                className="px-4 py-6 text-left"
-                      >
-                  {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                </TableCell>
-              ))}
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+          <thead className="border-b">
+            {table.getHeaderGroups().map((headerGroup) => (
+              <TableRow key={headerGroup.id}>
+                {headerGroup.headers.map((header) => (
+                  <TableCell key={header.id} className="px-4 py-2 text-left font-medium">
+                    {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
+                  </TableCell>
+                ))}
+              </TableRow>
+            ))}
+          </thead>
+          <TableBody>
+            {table.getRowModel().rows.map((row) => (
+              <TableRow
+                noBorder={true}
+                key={row.id}
+                className={`hover:bg-gray-100 ${row.getIsSelected() ? "border-l-2 border-orange-400" : ""}`}
+              >
+                {row.getVisibleCells().map((cell) => (
+                  <TableCell
+                    key={cell.id}
+                    className="px-4 py-6 text-left"
+                  >
+                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                  </TableCell>
+                ))}
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
 
         <DeleteMessageDialog
-        open={deleteDialogOpen}
-        onOpenChange={setDeleteDialogOpen}
-        onConfirm={handleConfirmDelete}
-        onCancel={handleCancelDelete}
-      />
+    open={deleteDialogOpen}
+    onOpenChange={setDeleteDialogOpen}
+    slug={selectedPostSlug}
+    onPostDeleted={handlePostDeleted}
+    onCancel={() => setDeleteDialogOpen(false)}
+/>
 
         <div className="flex justify-between items-center  py-1 my-3 mx-5 ">
           {/* 1 */}
