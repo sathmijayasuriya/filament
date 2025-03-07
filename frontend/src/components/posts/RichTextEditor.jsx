@@ -6,8 +6,7 @@ import Heading from '@tiptap/extension-heading'
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import { Bold, Italic, Strikethrough, Link as LinkIcon, Heading2, Heading3, List, ListOrdered, ImageIcon, Undo, Redo } from "lucide-react"
-import { Textarea } from "@/components/ui/textarea"; // Import Shadcn UI Textarea
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 
 export default function RichTextEditor({ content, setContent }) {
     const editor = useEditor({
@@ -19,29 +18,15 @@ export default function RichTextEditor({ content, setContent }) {
         ],
         content: content,
         onUpdate: ({ editor }) => {
+          // This is what updates the parent component's content
           setContent(editor.getHTML());
         },
       });
     
-      const [localContent, setLocalContent] = useState(content); // Local state for Textarea
-      const textareaRef = useRef(null);
-    
-      useEffect(() => {
-        if (editor) {
-          setLocalContent(editor.getHTML());
-        }
-      }, [editor, content]);
-    
-      useEffect(() => {
-        if (editor && textareaRef.current) {
-          editor.commands.setContent(localContent);
-        }
-      }, [localContent, editor]);
-    
       if (!editor) return null;
     
   return (
-    <div className=" p-3 ">
+    <div className="p-3">
       {/* Toolbar */}
       <div className="flex items-center gap-2">
         <Button variant="ghost" size="icon" onClick={() => editor.chain().focus().toggleBold().run()}>
@@ -68,10 +53,20 @@ export default function RichTextEditor({ content, setContent }) {
           <ListOrdered className="w-4 h-4" />
         </Button>
         <Separator orientation="vertical" />
-        <Button variant="ghost" size="icon" onClick={() => editor.chain().focus().setLink({ href: "#" }).run()}>
+        <Button variant="ghost" size="icon" onClick={() => {
+          const url = prompt('Enter the URL');
+          if (url) {
+            editor.chain().focus().setLink({ href: url }).run();
+          }
+        }}>
           <LinkIcon className="w-4 h-4" />
         </Button>
-        <Button variant="ghost" size="icon" onClick={() => editor.chain().focus().setImage({ src: "https://via.placeholder.com/150" }).run()}>
+        <Button variant="ghost" size="icon" onClick={() => {
+          const url = prompt('Enter the image URL');
+          if (url) {
+            editor.chain().focus().setImage({ src: url }).run();
+          }
+        }}>
           <ImageIcon className="w-4 h-4" />
         </Button>
         <Separator orientation="vertical" />
@@ -82,12 +77,10 @@ export default function RichTextEditor({ content, setContent }) {
           <Redo className="w-4 h-4" />
         </Button>
       </div>
-      <EditorContent editor={editor} className="hidden" />
-      <Textarea
-        ref={textareaRef}
-        value={localContent}
-        onChange={(e) => setLocalContent(e.target.value)}
-        className="min-h-[150px] border-none hover:border-none   p-3 focus:outline-none"
+      {/* Use only the EditorContent, not a separate textarea */}
+      <EditorContent 
+        editor={editor} 
+        className="min-h-[150px] p-3 focus:outline-none border-t mt-2" 
       />
     </div>
   )

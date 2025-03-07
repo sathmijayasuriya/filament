@@ -1,6 +1,4 @@
-// src/components/PostForm.jsx
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
@@ -11,145 +9,266 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-// import { DatePicker } from '@/components/ui/date-picker';
 import { Label } from "@/components/ui/label";
-import ImageUpload from "./ImageUpload ";
 import RichTextEditor from "./RichTextEditor";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { format } from "date-fns";
+import { CalendarIcon } from "lucide-react";
+import { toast } from "react-hot-toast";
+import { getStorage, ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
+import { app } from "../../firebase";
+import ImageUpload from "./ImageUpload ";
 
 const PostForm = () => {
   const [title, setTitle] = useState("");
   const [slug, setSlug] = useState("");
   const [content, setContent] = useState("");
-  const [author, setAuthor] = useState("");
-  const [category, setCategory] = useState("");
-  const [publishedDate, setPublishedDate] = useState(new Date());
+  const [category, setCategory] = useState({ id: "", name: "" });
+  const [categories, setCategories] = useState([]);
+  const [publishedDate, setPublishedDate] = useState(null);
   const [tags, setTags] = useState("");
   const [image, setImage] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState(null);
 
-  const handleImageChange = (e) => {
-    const file = e.target.files[0];
-    setImage(file);
+  // Fetch categories from backend
+  useEffect(() => {
+    fetch("http://localhost:5000/api/categories/names")
+      .then((res) => res.json())
+      .then((data) => setCategories(data))
+      .catch((error) => {
+        console.error("Error fetching categories:", error);
+        setError("Failed to fetch categories");
+      });
+  }, []);
+
+  // Auto-generate slug from title
+  useEffect(() => {
+    setSlug(title.toLowerCase().replace(/\s+/g, "-"));
+  }, [title]);
+
+  // Upload image to Firebase and return URL
+  const uploadImageToFirebase = async (file) => {
+    if (!file) return "";
+    
+    try {
+      const storage = getStorage(app);
+      const fileName = new Date().getTime() + file.name;
+      const storageRef = ref(storage, `blog-images/${fileName}`);
+      const uploadTask = uploadBytesResumable(storageRef, file);
+
+      return new Promise((resolve, reject) => {
+        uploadTask.on(
+          "state_changed",
+          (snapshot) => {
+            // Optional: Add progress tracking here
+            const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+            console.log('Upload is ' + progress + '% done');
+          },
+          (error) => {
+            console.error("Firebase upload error:", error);
+            reject(error);
+          },
+          async () => {
+            try {
+              const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+              resolve(downloadURL);
+            } catch (err) {
+              console.error("Error getting download URL:", err);
+              reject(err);
+            }
+          }
+        );
+      });
+    } catch (error) {
+      console.error("Error in uploadImageToFirebase:", error);
+      throw error;
+    }
   };
 
-  const handleSubmit = (e) => {
+  //  submission
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Handle form submission logic here
-    console.log({
-      title,
-      slug,
-      content,
-      author,
-      category,
-      publishedDate,
-      tags,
-      image,
-    });
+    setError(null);
+    
+    if (!title || !content || !category.id) {
+      toast.error("Please fill in all required fields.");
+      return;
+    }
+
+    setIsSubmitting(true);
+    let imageUrl = "";
+    
+    try {
+      if (image) {
+        console.log("Starting image upload...");
+        imageUrl = await uploadImageToFirebase(image);
+        console.log("Image uploaded successfully:", imageUrl);
+      }
+//data
+      const postData = {
+        title,
+        slug,
+        content,
+        category_id: parseInt(category.id),
+        image_path: imageUrl,
+        tags: tags.split(",").map((tag) => tag.trim()).filter(tag => tag), 
+        published_at: publishedDate ? format(publishedDate, "yyyy-MM-dd") : null,
+      };
+
+      console.log("Sending post data:", postData);
+
+      const response = await fetch("http://localhost:5000/api/posts/create", {
+        method: "POST",
+        headers: { 
+          "Content-Type": "application/json",
+          "Accept": "application/json"
+        },
+        body: JSON.stringify(postData),
+      });
+      
+      console.log("Response status:", response.status);
+      
+      const responseData = await response.json();
+      console.log("Response data:", responseData);
+
+      if (response.ok) {
+        toast.success("Post created successfully!");
+        setTitle("");
+        setSlug("");
+        setContent("");
+        setCategory({ id: "", name: "" });
+        setPublishedDate(null);
+        setTags("");
+        setImage(null);
+      } else {
+        setError(responseData.error || "Failed to create post");
+        toast.error(responseData.error || "Failed to create post");
+      }
+    } catch (error) {
+      console.error("Error submitting post:", error);
+      setError("An error occurred while creating the post");
+      toast.error("An error occurred while creating the post");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
     <form onSubmit={handleSubmit}>
+      {error && (
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 mb-4 rounded">
+          Error: {error}
+        </div>
+      )}
+      
       <div className="w-full p-5 rounded-lg border bg-white">
         <div className="grid grid-cols-2 gap-4 mt-4">
-          <div>
-            <Label className="mb-3" htmlFor="title">
-              Title
-            </Label>
+          <div className="mt-4" >
+            <Label className="mb-3"  htmlFor="title">Title</Label>
             <Input
               type="text"
               id="title"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
+              required
             />
           </div>
-          <div>
-            <Label className="mb-3" htmlFor="slug">
-              Slug
-            </Label>
-            <Input
-              type="text"
-              id="slug"
-              value={slug}
-              onChange={(e) => setSlug(e.target.value)}
-            />
+          <div className="mt-4">
+          <Label className="mb-3" htmlFor="slug">Slug</Label>
+            <Input type="text" id="slug" value={slug} readOnly />
           </div>
         </div>
 
         <div className="mt-4">
-          <Label className="mb-3" htmlFor="content">
-            Content
-          </Label>
+          <Label className="mb-3" htmlFor="content">Content</Label>
           <div className="border rounded-lg p-3">
             <RichTextEditor content={content} setContent={setContent} />
           </div>
         </div>
 
         <div className="grid grid-cols-2 gap-4 mt-4">
-          <div>
-            <Label className="mb-3" htmlFor="author">
-              Author
-            </Label>
-            <Select value={author} onValueChange={setAuthor}>
-              <SelectTrigger className="w-full" disabled>
-                <SelectValue placeholder="Select an option" />
+        <div className="mt-4">
+            <Label className="mb-3" htmlFor="category">Category</Label>
+            <Select 
+              value={category.id}
+              onValueChange={(id) => {
+                const selectedCategory = categories.find((cat) => cat.id === id);
+                if (selectedCategory) {
+                  setCategory({ id: selectedCategory.id, name: selectedCategory.name });
+                }
+              }}
+              required
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select a category" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="author1">Author 1</SelectItem>
-                <SelectItem value="author2">Author 2</SelectItem>
-                {/* Add more authors */}
+                {categories.map((cat) => (
+                  <SelectItem key={cat.id} value={cat.id}>
+                    {cat.name}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
-          <div>
-            <Label className="mb-3" htmlFor="category">
-              Category
-            </Label>
-            <Select value={category} onValueChange={setCategory}>
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select an option" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="category1">Category 1</SelectItem>
-                <SelectItem value="category2">Category 2</SelectItem>
-                {/* Add more categories */}
-              </SelectContent>
-            </Select>
+
+          <div className="mt-4">
+            <Label className="mb-3" htmlFor="publishedDate">Published Date</Label>
+            <Popover>
+              <PopoverTrigger asChild>
+                <div className="relative">
+                  <Input
+                    type="text"
+                    value={publishedDate ? format(publishedDate, "yyyy-MM-dd") : ""}
+                    readOnly
+                    className="w-full pr-10"
+                  />
+                  <CalendarIcon className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                </div>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={publishedDate}
+                  onSelect={setPublishedDate}
+                  initialFocus
+                />
+              </PopoverContent>
+            </Popover>
           </div>
         </div>
 
         <div className="grid grid-cols-2 gap-4 mt-4">
-          {/* <div>
-          <Label htmlFor="publishedDate">Published Date</Label>
-          <DatePicker date={publishedDate} onDateChange={setPublishedDate} />
-        </div> */}
-          <div>
-            <Label className="mb-3" htmlFor="tags">
-              Tags
-            </Label>
+          <div className="mt-4">
+            <Label className="mb-4" htmlFor="tags">Tags</Label>
             <Input
               type="text"
               id="tags"
               value={tags}
               onChange={(e) => setTags(e.target.value)}
-              placeholder="New tag"
+              placeholder="Comma-separated tags"
             />
           </div>
         </div>
       </div>
-      {/* 2 section */}
-      <div className= " bg-white w-full p-5 mt-7 rounded-lg border">
-        <Label className="mb-3" htmlFor="image">
-          Image
-        </Label>
-        <ImageUpload onImageChange={handleImageChange} />
+
+      {/* Image Upload Section */}
+      <div className="bg-white w-full p-5 mt-7 rounded-lg border">
+        <Label className="mb-3" htmlFor="image">Image</Label>
+        <ImageUpload onImageChange={setImage} />
         {image && <p className="mt-2">Selected file: {image.name}</p>}
       </div>
 
+      {/* Submit Buttons */}
       <div className="mt-6 flex justify-start gap-4">
         <Button
           className="bg-orange-400 hover:bg-orange-500 text-white"
           type="submit"
+          disabled={isSubmitting}
         >
-          Create
+          {isSubmitting ? "Creating..." : "Create"}
         </Button>
         <Button type="button" variant="outline">
           Create & create another
