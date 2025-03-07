@@ -33,13 +33,16 @@ import {
 import DeleteMessageDialog from "../posts/DeleteMessageDialog";
 import ViewCategoryDialog from "./ViewCategoryDialog";
 import { format } from 'date-fns'; // Import the format function from date-fns
+import axios from 'axios'; // Import axios
+import { useNavigate } from 'react-router-dom';
 
-const CategoryTable = () => {
+const CategoryTable = ({categoryCreated }) => {
   const [data, setData] = useState([]);
   const [page, setPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(5);
   const [selectedRows, setSelectedRows] = useState([]);
   const [selectAll, setSelectAll] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -57,7 +60,7 @@ const CategoryTable = () => {
     };
 
     fetchData();
-  }, []);
+  }, [categoryCreated]);
 
   const totalPages = Math.ceil(data.length / rowsPerPage);
   const start = (page - 1) * rowsPerPage;
@@ -84,39 +87,55 @@ const CategoryTable = () => {
 
   //delete
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [selectedRowId, setSelectedRowId] = useState(null);
-  const handleDeleteClick = (rowId) => {
-    setSelectedRowId(rowId);
+  const [selectedCategorySlug, setSelectedCategorySlug] = useState(null); 
+
+  const handleDeleteClick = (slug) => {
+    setSelectedCategorySlug(slug);
     setDeleteDialogOpen(true);
+};
+
+const handleConfirmDelete = async () => {
+    try {
+      console.log("Deleting slug:", selectedCategorySlug);
+      await axios.delete(`http://localhost:5000/api/categories/${selectedCategorySlug}`);
+      const response = await fetch("http://localhost:5000/api/categories");
+      if (response.ok) {
+        const result = await response.json();
+        setData(result);
+        navigate('/categories'); 
+      } else {
+          console.error("Failed to refresh categories after deletion");
+      }
+      setDeleteDialogOpen(false);
+      setSelectedCategorySlug(null);
+    } catch (error) {
+      console.error("Error deleting category:", error);
+    }
   };
 
-  const handleConfirmDelete = () => {
-    console.log("Deleting row with ID:", selectedRowId);
+const handleCancelDelete = () => {
     setDeleteDialogOpen(false);
-    setSelectedRowId(null);
-  };
-
-  const handleCancelDelete = () => {
-    setDeleteDialogOpen(false);
-    setSelectedRowId(null);
-  };
-
-  //view
+    setSelectedCategorySlug(null);
+};
+//view
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState(null);
 
-  const handleViewClick = (rowId) => {
-    setSelectedRowId(rowId);
-    const category = data.find((item) => item.slug === rowId);
-    setSelectedCategory(category);
-    setViewDialogOpen(true);
-  };
+  const handleViewClick = async (slug) => { // Make handleViewClick async
+    try {
+        const response = await axios.get(`http://localhost:5000/api/categories/${slug}`);
+        setSelectedCategory(response.data);
+        setViewDialogOpen(true);
+    } catch (error) {
+        console.error("Error fetching category details:", error);
+    }
+};
 
-  const handleCloseView = () => {
+const handleCloseView = () => {
     setViewDialogOpen(false);
-    setSelectedRowId(null);
-    setSelectedCategory(null);
-  };
+    setSelectedCategory(null); // Reset selectedCategory
+};
+
 
   return (
     <div className="p-4">
@@ -276,16 +295,18 @@ const CategoryTable = () => {
           </TableFooter>
         </Table>
         <DeleteMessageDialog
-          open={deleteDialogOpen}
-          onOpenChange={setDeleteDialogOpen}
-          onConfirm={handleConfirmDelete}
-          onCancel={handleCancelDelete}
+            open={deleteDialogOpen}
+            onOpenChange={setDeleteDialogOpen}
+            onConfirm={handleConfirmDelete}
+            onCancel={handleCancelDelete}
+            title="Delete Category"
+            description="Are you sure you want to delete this category?"
         />
         <ViewCategoryDialog
           open={viewDialogOpen}
           onOpenChange={setViewDialogOpen}
-          category={selectedCategory} // Pass the category data
-          onClose={handleCloseView} // Pass the handleCloseView function
+          category={selectedCategory} 
+          onClose={handleCloseView} 
         />
       </div>
     </div>

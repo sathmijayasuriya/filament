@@ -9,7 +9,7 @@ import { Link } from "react-router-dom";
 import CreateCategoryDialog from "./CreateCategoryDialog";
 import React, { useState } from "react";
 
-export default function CategoryHeader() {
+export default function CategoryHeader({onCategoryCreated }) {
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
 
   const handleClickAdd = () => {
@@ -22,6 +22,7 @@ export default function CategoryHeader() {
 
   const handleConfirm = () => {
     console.log("Category created!");
+    onCategoryCreated(); //notify parent
     handleCloseDialog();
   };
 
@@ -47,6 +48,7 @@ export default function CategoryHeader() {
         onOpenChange={setCreateDialogOpen}
         onConfirm={handleConfirm}
         onCancel={handleCloseDialog}
+        onCategoryCreated={handleConfirm} //pass the function
       />
     </div>
   );

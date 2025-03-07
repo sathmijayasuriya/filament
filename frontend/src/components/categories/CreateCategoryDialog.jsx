@@ -17,17 +17,16 @@ import {
   Redo,
 } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
-import { toast } from "react-hot-toast"; // Import toast for notifications
-import { useNavigate } from "react-router-dom"; // Import useNavigate
+import { toast } from "react-hot-toast"; 
+import { useNavigate } from "react-router-dom"; 
 
 
-export default function CreateCategoryDialog({ open, onOpenChange, onConfirm, onCancel }) {
+export default function CreateCategoryDialog({ open, onOpenChange, onConfirm, onCancel,onCategoryCreated  }) {
   const [isVisible, setIsVisible] = useState(true);
   const [description, setDescription] = useState("");
-  const [name, setName] = useState(""); // State for category name
-  const [slug, setSlug] = useState(""); // State for category slug
-  const navigate = useNavigate(); // Initialize navigate
-
+  const [name, setName] = useState(""); 
+  const [slug, setSlug] = useState(""); 
+  const navigate = useNavigate(); 
     // Update slug when name changes
     const handleNameChange = (e) => {
       setName(e.target.value);
@@ -56,11 +55,12 @@ export default function CreateCategoryDialog({ open, onOpenChange, onConfirm, on
   
         if (response.ok) {
           toast.success("Category created successfully!");
-          onConfirm(); // Close the dialog or perform other actions
+          onConfirm(); 
           setName("");
           setSlug("");
           setIsVisible(true);
           setDescription("");
+          onCategoryCreated(); // refresh
           navigate("/categories"); 
         } else {
           const errorData = await response.json();

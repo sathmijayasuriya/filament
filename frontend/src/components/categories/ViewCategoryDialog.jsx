@@ -13,7 +13,7 @@ import { Button } from '@/components/ui/button';
 export default function ViewCategoryDialog({ open, onOpenChange, category }) {
   if (!category) return null; // Handle case where category data is not available
 
-  const { name, slug, description, visibility, updatedAt } = category;
+  const { name, slug, description, visibility, updated_at } = category;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -75,7 +75,7 @@ export default function ViewCategoryDialog({ open, onOpenChange, category }) {
                 Updated at
               </Label>
               <div className="col-span-3">
-                {new Date(updatedAt).toLocaleString()}
+                {new Date(updated_at).toLocaleString()}
               </div>
             </div>
           </div>
