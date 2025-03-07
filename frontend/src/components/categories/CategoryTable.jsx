@@ -31,7 +31,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import DeleteMessageDialog from "../posts/DeleteMessageDialog";
-
+import ViewCategoryDialog from "./ViewCategoryDialog";
 const data = [
   { name: "Category 1", slug: "category-1", visibility: true, lastUpdated: "Nov 1, 2024" },
   { name: "Category 2", slug: "category-2", visibility: false, lastUpdated: "Oct 25, 2024" },
@@ -70,7 +70,6 @@ const CategoryTable = () => {
   };
 
   //delete
-    //delete 
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const [selectedRowId, setSelectedRowId] = useState(null);
     const handleDeleteClick = (rowId) => {
@@ -79,7 +78,6 @@ const CategoryTable = () => {
     };
   
     const handleConfirmDelete = () => {
-      // Perform delete action here using selectedRowId
       console.log("Deleting row with ID:", selectedRowId);
       setDeleteDialogOpen(false);
       setSelectedRowId(null);
@@ -90,7 +88,23 @@ const CategoryTable = () => {
       setSelectedRowId(null);
     };
 
-  
+  //view
+  const [viewDialogOpen, setViewDialogOpen] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState(null); 
+
+  const handleViewClick = (rowId) => {
+    setSelectedRowId(rowId);
+    const category = data.find((item) => item.slug === rowId); 
+    setSelectedCategory(category); // Set the category state
+    setViewDialogOpen(true);
+  };
+
+  const handleCloseView = () => {
+    setViewDialogOpen(false);
+    setSelectedRowId(null);
+    setSelectedCategory(null); // Clear the category state
+  };
+
 
   return (
     <div className="p-4">
@@ -124,9 +138,15 @@ const CategoryTable = () => {
           </TableHeader>
           <TableBody>
             {pageData.map((item) => (
-              <TableRow key={item.slug} 
-              noBorder = {true}
-              className={`hover:bg-gray-100 ${selectedRows.includes(item.slug) ? "border-l-2 border-orange-400" : ""}`}>
+              <TableRow
+                key={item.slug}
+                noBorder={true}
+                className={`hover:bg-gray-100 ${
+                  selectedRows.includes(item.slug)
+                    ? "border-l-2 border-orange-400"
+                    : ""
+                }`}
+              >
                 <TableCell>
                   <div className="ml-10">
                     <Checkbox
@@ -169,13 +189,18 @@ const CategoryTable = () => {
                       </svg>
                     </span>
                   )}
-                </TableCell>                
+                </TableCell>
                 <TableCell>{item.lastUpdated}</TableCell>
                 <TableCell className="flex space-x-2">
                   <div className="flex space-x-2">
                     <div className="flex items-center space-x-[-10px]">
                       <EyeIcon className="text-[#A2A2AB] h-4 w-4" />
-                      <Button variant="link" size="sm">
+                      <Button
+                        onClick={() => handleViewClick(item.slug)}
+                        className="text-[#A2A2AB]"
+                        variant="link"
+                        size="sm"
+                      >
                         View
                       </Button>
                     </div>
@@ -207,44 +232,48 @@ const CategoryTable = () => {
           </TableBody>
           <TableFooter>
             <TableRow>
-            <TableCell colSpan={3}>
-                
-              <div className="flex justify-between items-center ml-6 p-3">
-                <div>
-                  Showing {start + 1} to {Math.min(end, data.length)} of{" "}
-                  {data.length} results
+              <TableCell colSpan={3}>
+                <div className="flex justify-between items-center ml-6 p-3">
+                  <div>
+                    Showing {start + 1} to {Math.min(end, data.length)} of{" "}
+                    {data.length} results
+                  </div>
+                  <div className="flex items-center space-x-4">
+                    <Select
+                      value={rowsPerPage.toString()}
+                      onValueChange={handleRowsPerPageChange}
+                    >
+                      <SelectTrigger className="w-[100px]">
+                        <SelectValue placeholder="Per page" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="5">5</SelectItem>
+                        <SelectItem value="10">10</SelectItem>
+                        <SelectItem value="20">20</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <Pagination
+                      count={totalPages}
+                      page={page}
+                      onPageChange={handlePageChange}
+                    />
+                  </div>
                 </div>
-                <div className="flex items-center space-x-4">
-                  <Select
-                    value={rowsPerPage.toString()}
-                    onValueChange={handleRowsPerPageChange}
-                  >
-                    <SelectTrigger className="w-[100px]">
-                      <SelectValue placeholder="Per page" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="5">5</SelectItem>
-                      <SelectItem value="10">10</SelectItem>
-                      <SelectItem value="20">20</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <Pagination
-                    count={totalPages}
-                    page={page}
-                    onPageChange={handlePageChange}
-                  />
-                </div>
-              </div>
-            </TableCell>
+              </TableCell>
             </TableRow>
           </TableFooter>
         </Table>
         <DeleteMessageDialog
-        open={deleteDialogOpen}
-        onOpenChange={setDeleteDialogOpen}
-        onConfirm={handleConfirmDelete}
-        onCancel={handleCancelDelete}
-      />
+          open={deleteDialogOpen}
+          onOpenChange={setDeleteDialogOpen}
+          onConfirm={handleConfirmDelete}
+          onCancel={handleCancelDelete}
+        />
+        <ViewCategoryDialog
+          open={viewDialogOpen}
+          onOpenChange={setViewDialogOpen}
+          category={selectedCategory} // Pass the category data
+        />
       </div>
     </div>
   );

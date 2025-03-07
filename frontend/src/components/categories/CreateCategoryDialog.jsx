@@ -1,24 +1,39 @@
 import { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import {
+  Bold,
+  Italic,
+  Link,
+  Heading,
+  Code2,
+  ListOrdered,
+  List,
+  Image,
+  Undo,
+  Redo,
+} from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
 
-export default function CreateCategoryDialog({open, onOpenChange, onConfirm, onCancel }) {
+export default function CreateCategoryDialog({ open, onOpenChange, onConfirm, onCancel }) {
   const [isVisible, setIsVisible] = useState(true);
-  
+  const [description, setDescription] = useState("");
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-2xl">
+      <DialogContent className="sm:max-w-4xl">
         <DialogHeader>
           <DialogTitle>Create Category</DialogTitle>
         </DialogHeader>
         <div className="grid gap-4">
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="name">Name <span className="text-red-500">*</span></Label>
+              <Label htmlFor="name">
+                Name <span className="text-red-500">*</span>
+              </Label>
               <Input id="name" placeholder="Enter category name" className="mt-1" />
             </div>
             <div>
@@ -28,16 +43,64 @@ export default function CreateCategoryDialog({open, onOpenChange, onConfirm, onC
           </div>
           <div>
             <Label htmlFor="description">Description</Label>
-            <Textarea id="description" placeholder="Enter category description" className="mt-1" />
+            <div className="border rounded-md p-2">
+              <div className="flex items-center space-x-2 mb-2">
+                <Button variant="outline" size="icon">
+                  <Bold size={16} />
+                </Button>
+                <Button variant="outline" size="icon">
+                  <Italic size={16} />
+                </Button>
+                <Button variant="outline" size="icon">
+                  <Link size={16} />
+                </Button>
+                <Button variant="outline" size="icon">
+                  <Heading size={16} />
+                </Button>
+                <Button variant="outline" size="icon">
+                  <Code2 size={16} />
+                </Button>
+                <Button variant="outline" size="icon">
+                  <ListOrdered size={16} />
+                </Button>
+                <Button variant="outline" size="icon">
+                  <List size={16} />
+                </Button>
+                <Button variant="outline" size="icon">
+                  <Image size={16} />
+                </Button>
+                <Button variant="outline" size="icon">
+                  <Undo size={16} />
+                </Button>
+                <Button variant="outline" size="icon">
+                  <Redo size={16} />
+                </Button>
+              </div>
+              <Textarea
+                id="description"
+                placeholder="Enter category description"
+                className="mt-1 h-50"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+              />
+            </div>
           </div>
           <div className="flex items-center gap-2">
             <Switch id="visibility" checked={isVisible} onCheckedChange={setIsVisible} />
             <Label htmlFor="visibility">Visible to customers.</Label>
           </div>
           <div className="flex justify-end gap-2">
-            <Button variant="outline" onClick={onCancel}>Cancel</Button>
-            <Button variant="secondary">Create & create another</Button>
-            <Button onClick={onConfirm} >Create</Button>
+            <Button
+              className="bg-orange-400 hover:bg-orange-500 text-white"
+              variant="primary"
+              onClick={onConfirm}
+            >
+              Create
+            </Button>
+            <Button variant="outline" onClick={onCancel}>
+              Cancel
+            </Button>
+            <Button variant="outline">Create & create another</Button>
           </div>
         </div>
       </DialogContent>

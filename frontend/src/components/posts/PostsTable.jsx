@@ -207,7 +207,7 @@ const PostsTable = () => {
         <div className="flex space-x-2">
           <div className="flex items-center space-x-[-10px]">
             <EyeIcon className="text-[#A2A2AB] h-4 w-4" />
-            <Button variant="link" size="sm">
+            <Button className="text-[#A2A2AB]" variant="link" size="sm">
               View
             </Button>
           </div>
