@@ -21,12 +21,23 @@ exports.getAllPosts = async (req, res) => {
     }
 };
 
-// 🔹 Get a Single Post by Slug
+// 🔹 Get a Single Post by Slug// 🔹 Get a Single Post by Slug with Category Name
 exports.getPostBySlug = async (req, res) => {
     const { slug } = req.params;
     try {
-        const [rows] = await pool.query("SELECT * FROM posts WHERE slug = ?", [slug]);
-        if (rows.length === 0) return res.status(404).json({ error: 'Post not found' });
+        const [rows] = await pool.query(`
+            SELECT 
+                posts.*, 
+                categories.name AS category_name 
+            FROM posts 
+            LEFT JOIN categories ON posts.category_id = categories.id
+            WHERE posts.slug = ?
+        `, [slug]);
+
+        if (rows.length === 0) {
+            return res.status(404).json({ error: 'Post not found' });
+        }
+
         res.json(rows[0]);
     } catch (error) {
         console.error(error);

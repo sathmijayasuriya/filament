@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react';
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -10,9 +10,53 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableRow, TableCell } from "@/components/ui/table";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
-import Book from "@/assets/book.png";
+import { useParams } from 'react-router-dom'; // Assuming you're using React Router
+import { getStorage, ref, getDownloadURL } from "firebase/storage";
+import { app } from '../../firebase';
 
 export default function PostView() {
+  const { slug } = useParams(); // Get the slug from the URL
+  const [post, setPost] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [imageUrl, setImageUrl] = useState(null);
+
+  useEffect(() => {
+    const fetchPost = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const response = await fetch(`http://localhost:5000/api/posts/view/${slug}`);
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+        setPost(data);
+        if (data.image_path) {
+          const storage = getStorage(app);
+          const imageRef = ref(storage, data.image_path);
+
+          getDownloadURL(imageRef).then((url) => {
+            setImageUrl(url);
+          }).catch((error) => {
+            console.error("Error getting download URL:", error);
+          });
+        }
+
+      } catch (err) {
+        setError(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPost();
+  }, [slug]);
+
+  if (loading) return <div>Loading...</div>;
+  if (error) return <div>Error: {error.message}</div>;
+  if (!post) return <div>Post not found.</div>;
+
   return (
     <div className="mb-30">
       <div className="px-6 py-6 ">
@@ -22,7 +66,7 @@ export default function PostView() {
           </BreadcrumbItem>
           <BreadcrumbSeparator />
           <BreadcrumbItem>
-            <BreadcrumbLink href="#">postid</BreadcrumbLink>
+            <BreadcrumbLink href={`/posts/${slug}`}>{slug}</BreadcrumbLink>
           </BreadcrumbItem>
           <BreadcrumbSeparator />
           <BreadcrumbItem>
@@ -30,7 +74,7 @@ export default function PostView() {
           </BreadcrumbItem>
         </Breadcrumb>
         <div className="flex justify-between items-center mt-4">
-          <h2 className="text-2xl font-bold">post tilte name</h2>
+          <h2 className="text-2xl font-bold">{post.title}</h2>
         </div>
         <PostViewMenu />
       </div>
@@ -47,104 +91,89 @@ export default function PostView() {
                           <TableRow noBorder={true}>
                             <TableCell className="font-medium text-sm py-1">
                               Title
-                            </TableCell>{" "}
-                            {/* Added py-1 */}
+                            </TableCell>
                           </TableRow>
                           <TableRow noBorder={true}>
                             <TableCell className="text-sm py-1">
-                              Consequuntur tenetur aut quas.
-                            </TableCell>{" "}
-                            {/* Added py-1 */}
+                              {post.title}
+                            </TableCell>
                           </TableRow>
-
                           <TableRow noBorder={true}>
                             <TableCell className="font-medium text-sm py-1">
                               Slug
-                            </TableCell>{" "}
-                            {/* Added py-1 */}
+                            </TableCell>
                           </TableRow>
                           <TableRow noBorder={true}>
                             <TableCell className="text-sm py-1">
-                              consequuntur-tenetur-aut-quas
-                            </TableCell>{" "}
-                            {/* Added py-1 */}
+                              {post.slug}
+                            </TableCell>
                           </TableRow>
-
                           <TableRow noBorder={true}>
                             <TableCell className="font-medium text-sm py-1">
                               Published at
-                            </TableCell>{" "}
-                            {/* Added py-1 */}
+                            </TableCell>
                           </TableRow>
                           <TableRow noBorder={true}>
                             <TableCell className="py-1">
-                              {" "}
-                              {/* Added py-1 */}
                               <Badge
                                 variant="secondary"
                                 className="bg-green-100 text-green-600 text-xs"
                               >
-                                Mar 25, 2025
+                                {post.published_at ? new Date(post.published_at).toLocaleDateString() : 'Not published'}
                               </Badge>
                             </TableCell>
                           </TableRow>
                         </TableBody>
                       </Table>
                     </div>
-
                     <div>
                       <Table className="border-collapse">
                         <TableBody>
                           <TableRow noBorder={true}>
                             <TableCell className="font-medium text-sm py-1">
                               Author
-                            </TableCell>{" "}
-                            {/* Added py-1 */}
+                            </TableCell>
                           </TableRow>
                           <TableRow noBorder={true}>
                             <TableCell className="text-sm py-1">
-                              Madonna Rath
-                            </TableCell>{" "}
-                            {/* Added py-1 */}
+                              {post.author || 'Unknown'}
+                            </TableCell>
                           </TableRow>
-
                           <TableRow noBorder={true}>
                             <TableCell className="font-medium text-sm py-1">
                               Category
-                            </TableCell>{" "}
-                            {/* Added py-1 */}
+                            </TableCell>
                           </TableRow>
                           <TableRow noBorder={true}>
                             <TableCell className="text-sm py-1">
-                              veritatis atque velit
-                            </TableCell>{" "}
-                            {/* Added py-1 */}
+                              {post.category_name  || 'Uncategorized'}
+                            </TableCell>
                           </TableRow>
-
                           <TableRow noBorder={true}>
                             <TableCell className="font-medium text-sm py-1">
                               Tags
-                            </TableCell>{" "}
-                            {/* Added py-1 */}
+                            </TableCell>
                           </TableRow>
                           <TableRow noBorder={true}>
-                            <TableCell className="text-sm py-1">-</TableCell>{" "}
-                            {/* Added py-1 */}
+                            <TableCell className="text-sm py-1">
+                              {post.tags ? JSON.parse(post.tags).join(', ') : '-'}
+                            </TableCell>
                           </TableRow>
                         </TableBody>
                       </Table>
                     </div>
                   </div>
                 </div>
-
                 {/* Image */}
                 <div className="flex items-center justify-center">
                   <div className="w-40 h-50 rounded-lg overflow-hidden relative">
-                    <img
-                      src={Book}
-                      alt="Author"
-                      className="absolute inset-0 w-full h-full object-cover"
-                    />
+                    {imageUrl && (
+                      <img
+                        src={imageUrl}
+                        alt={post.title}
+                        className="absolute inset-0 w-full h-full object-cover"
+                      />
+                    )}
                   </div>
                 </div>
               </div>
@@ -157,10 +186,7 @@ export default function PostView() {
                 Content
               </AccordionTrigger>
               <AccordionContent className="p-4 bg-white border rounded-md">
-                Rabbit Sends in a great hurry, muttering to itself 'Then I'll go
-                round a deal too far off to the whiting,' said Alice, quite
-                forgetting in the kitchen that did not sneeze, were the cook, to
-                see that.
+                {post.content}
               </AccordionContent>
             </AccordionItem>
           </Accordion>

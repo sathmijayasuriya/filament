@@ -29,7 +29,7 @@ const router = createBrowserRouter([
         element: <PostsCreate/>,
       },
       {
-        path: "/posts/:id",
+        path: "/posts/:slug",
         element: <ViewPost />,
       },
       {

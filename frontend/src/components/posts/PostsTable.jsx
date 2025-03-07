@@ -23,11 +23,13 @@ import {
 } from "@/components/ui/table";
 import { getStorage, ref, getDownloadURL } from "firebase/storage";
 import { app } from "../../firebase";
+import { useNavigate } from "react-router-dom"; // Import useNavigate
 
 const PostsTable = () => {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const navigate = useNavigate(); // Initialize useNavigate
 
   useEffect(() => {
     const fetchData = async () => {
@@ -211,7 +213,12 @@ const PostsTable = () => {
         <div className="flex space-x-2">
           <div className="flex items-center space-x-[-10px]">
             <EyeIcon className="text-[#A2A2AB] h-4 w-4" />
-            <Button className="text-[#A2A2AB]" variant="link" size="sm">
+            <Button
+              className="text-[#A2A2AB]"
+              variant="link"
+              size="sm"
+              onClick={() => navigate(`/posts/${row.original.slug}`)} // Navigate to the post view
+            >
               View
             </Button>
           </div>
