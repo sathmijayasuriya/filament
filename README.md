@@ -13,9 +13,9 @@ A full-stack application for managing blog posts and categories.
 - ✅ **Image Upload:**
     - Integrated image upload using Firebase Storage.
 - ✅ **Database:**
-    - MySQL database with migrations (using provided table structures).
+    - MySQL database with migrations.
 - ✅ **Styling:**
-    - Styled using Tailwind CSS and shadcn/ui for a modern and responsive user interface.
+    - Styled using Tailwind CSS and shadcn/ui for a modern user interface.
 
 ---
 
@@ -23,9 +23,9 @@ A full-stack application for managing blog posts and categories.
 
 ### Frontend
 
-- **Vite + React:** For a fast and efficient frontend development experience.
-- **Tailwind CSS:** For utility-first CSS styling.
-- **shadcn/ui:** For pre-built, accessible UI components.
+- **React + vite:** 
+- **Tailwind CSS:** 
+- **shadcn/ui:** 
 
 ### Backend
 
@@ -114,7 +114,7 @@ A full-stack application for managing blog posts and categories.
     -   Start the backend server:
 
         ```bash
-        npm run dev
+        node index.js    
         ```
 
 3.  **Frontend Setup:**
