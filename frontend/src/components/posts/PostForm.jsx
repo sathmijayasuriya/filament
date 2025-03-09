@@ -20,7 +20,7 @@ import { getStorage, ref, uploadBytesResumable, getDownloadURL } from "firebase/
 import { app } from "../../firebase";
 import ImageUpload from "./ImageUpload ";
 import { useNavigate } from 'react-router-dom'; // Import useNavigate
-
+import TagInput from "./TagInput";
 
 const PostForm = () => {
   const [title, setTitle] = useState("");
@@ -117,7 +117,7 @@ const PostForm = () => {
         content,
         category_id: parseInt(category.id),
         image_path: imageUrl,
-        tags: tags.split(",").map((tag) => tag.trim()).filter(tag => tag), 
+        tags: tags,
         published_at: publishedDate ? format(publishedDate, "yyyy-MM-dd") : null,
       };
 
@@ -248,13 +248,7 @@ const PostForm = () => {
         <div className="grid grid-cols-2 gap-4 mt-4">
           <div className="mt-4">
             <Label className="mb-4" htmlFor="tags">Tags</Label>
-            <Input
-              type="text"
-              id="tags"
-              value={tags}
-              onChange={(e) => setTags(e.target.value)}
-              placeholder="Comma-separated tags"
-            />
+            <TagInput value={tags} onChange={setTags} />
           </div>
         </div>
       </div>

@@ -17,6 +17,7 @@ const buttonVariants = cva(
         secondary: "hover:bg-accent hover:text-accent-foreground",
         ghost: "hover:none cursor-pointer",
         link: "text-primary underline-offset-4 hover:underline",
+        badgebutton:"bg-orange-100 text-orange-600 border-orange-200 ",
       },
       size: {
         default: "h-9 px-4 py-2 has-[>svg]:px-3",

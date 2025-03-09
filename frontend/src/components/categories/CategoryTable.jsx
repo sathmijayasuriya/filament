@@ -32,8 +32,8 @@ import {
 } from "@/components/ui/select";
 import DeleteMessageDialog from "../posts/DeleteMessageDialog";
 import ViewCategoryDialog from "./ViewCategoryDialog";
-import { format } from 'date-fns'; // Import the format function from date-fns
-import axios from 'axios'; // Import axios
+import { format } from 'date-fns'; 
+import axios from 'axios'; 
 import { useNavigate } from 'react-router-dom';
 import EditCategoryDialog from "./EditCategoryDialog";
 
@@ -43,6 +43,7 @@ const CategoryTable = ({categoryCreated }) => {
   const [rowsPerPage, setRowsPerPage] = useState(5);
   const [selectedRows, setSelectedRows] = useState([]);
   const [selectAll, setSelectAll] = useState(false);
+  const [searchTerm, setSearchTerm] = useState(''); 
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -63,10 +64,16 @@ const CategoryTable = ({categoryCreated }) => {
     fetchData();
   }, [categoryCreated]);
 
-  const totalPages = Math.ceil(data.length / rowsPerPage);
+   // Filter based on the search term
+  const filteredData = data.filter((item) =>
+    item.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+
+  const totalPages = Math.ceil(filteredData.length / rowsPerPage);
   const start = (page - 1) * rowsPerPage;
   const end = start + rowsPerPage;
-  const pageData = data.slice(start, end);
+  const pageData = filteredData.slice(start, end);
 
   const handlePageChange = (newPage) => setPage(newPage);
 
@@ -98,14 +105,15 @@ const CategoryTable = ({categoryCreated }) => {
 const handleConfirmDelete = async () => {
     try {
       console.log("Deleting slug:", selectedCategorySlug);
-      await axios.delete(`http://localhost:5000/api/categories/${selectedCategorySlug}`);
+      await axios.delete(`http://localhost:5000/api/categories/delete/${selectedCategorySlug}`);
       const response = await fetch("http://localhost:5000/api/categories");
       if (response.ok) {
         const result = await response.json();
         setData(result);
         navigate('/categories'); 
       } else {
-          console.error("Failed to refresh categories after deletion");
+          const errorData = await response.json();
+          console.error(errorData.error ||"Failed to refresh categories after deletion");
       }
       setDeleteDialogOpen(false);
       setSelectedCategorySlug(null);
@@ -142,142 +150,152 @@ const [selectedCategoryToEdit, setSelectedCategoryToEdit] = useState(null);
 
 
   return (
-    <div className="p-4">
-      <div className="rounded-md border bg-white">
-        <div className=" border-b">
-          <div className="flex justify-end items-center my-3 mx-5">
-            <Input placeholder="Search" className="w-[300px]" />
-          </div>
-        </div>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableCell className="font-medium text-sm py-4 ">
-                <div className="ml-10">
+<div className="p-4">
+  <div className="rounded-md border bg-white">
+    <div className=" border-b">
+      <div className="flex justify-end items-center my-3 mx-5">
+        <Input
+          placeholder="Search"
+          className="w-full sm:w-[300px]"
+          onChange={(e) => setSearchTerm(e.target.value)}
+        />
+      </div>
+    </div>
+    <div className="overflow-x-auto">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableCell className="font-medium text-sm py-4 whitespace-nowrap">
+              <div className="ml-2 sm:ml-10">
+                <Checkbox
+                  checked={selectAll}
+                  onCheckedChange={handleSelectAll}
+                />
+              </div>
+            </TableCell>
+            <TableCell className="font-medium text-sm py-4 whitespace-nowrap">
+              Name
+            </TableCell>
+            <TableCell className="font-medium text-sm py-4 whitespace-nowrap">
+              Slug
+            </TableCell>
+            <TableCell className="font-medium text-sm py-4 whitespace-nowrap">
+              Visibility
+            </TableCell>
+            <TableCell className="font-medium text-sm py-4 whitespace-nowrap">
+              Last Updated
+            </TableCell>
+            <TableCell className="whitespace-nowrap"></TableCell>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {pageData.map((item) => (
+            <TableRow
+              key={item.slug}
+              noBorder={true}
+              className={`hover:bg-gray-100 ${
+                selectedRows.includes(item.slug)
+                  ? "border-l-2 border-orange-400"
+                  : ""
+              }`}
+            >
+              <TableCell>
+                <div className="ml-2 sm:ml-10">
                   <Checkbox
-                    checked={selectAll}
-                    onCheckedChange={handleSelectAll}
+                    checked={selectedRows.includes(item.slug)}
+                    onCheckedChange={() => handleRowSelect(item.slug)}
                   />
                 </div>
               </TableCell>
-              <TableCell className="font-medium text-sm py-4">Name</TableCell>
-              <TableCell className="font-medium text-sm py-4">Slug</TableCell>
-              <TableCell className="font-medium text-sm py-4">
-                Visibility
+              <TableCell className="whitespace-nowrap">{item.name}</TableCell>
+              <TableCell className="whitespace-nowrap">{item.slug}</TableCell>
+              <TableCell className="whitespace-nowrap">
+                {item.visibility ? (
+                  <span className="text-green-500">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 24 24"
+                      fill="currentColor"
+                      className="w-4 h-4"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12zm13.36-1.814a.75.75 0 1 0-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 0 0-1.06 1.06l2.25 2.25a.75.75 0 0 0 1.14-.094l3.75-5.25z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                  </span>
+                ) : (
+                  <span className="text-red-500">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 24 24"
+                      fill="currentColor"
+                      className="w-4 h-4"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25zm-1.72 6.97a.75.75 0 1 0-1.06 1.06L12 12.75l-2.78 2.78a.75.75 0 1 0 1.06 1.06L13.06 13.8l2.78 2.78a.75.75 0 1 0 1.06-1.06L14.1 12.75l2.78-2.78a.75.75 0 1 0-1.06-1.06L13.06 11.7l-2.78-2.78z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                  </span>
+                )}
               </TableCell>
-              <TableCell className="font-medium text-sm py-4">
-                Last Updated
+              <TableCell className="whitespace-nowrap">
+                {format(new Date(item.updated_at), "yyyy-MM-dd")}
               </TableCell>
-              <TableCell></TableCell>
+              <TableCell className="flex space-x-2 whitespace-nowrap">
+                <div className="flex space-x-2">
+                  <div className="flex items-center space-x-[-10px]">
+                    <EyeIcon className="text-[#A2A2AB] h-4 w-4" />
+                    <Button
+                      onClick={() => handleViewClick(item.slug)}
+                      className="text-[#A2A2AB]"
+                      variant="link"
+                      size="sm"
+                    >
+                      View
+                    </Button>
+                  </div>
+                  <div className="flex items-center space-x-[-10px]">
+                    <PencilSquareIcon className="text-orange-500 h-4 w-4" />
+                    <Button
+                      className="text-orange-500"
+                      variant="link"
+                      size="sm"
+                      onClick={() => {
+                        setSelectedCategoryToEdit(item);
+                        setEditDialogOpen(true);
+                      }}
+                    >
+                      Edit
+                    </Button>
+                  </div>
+                  <div className="flex items-center space-x-[-10px]">
+                    <TrashIcon className="text-red-500 h-4 w-4" />
+                    <Button
+                      className="text-red-500"
+                      variant="link"
+                      size="sm"
+                      onClick={() => handleDeleteClick(item.slug)}
+                    >
+                      Delete
+                    </Button>
+                  </div>
+                </div>
+              </TableCell>
             </TableRow>
-          </TableHeader>
-          <TableBody>
-            {pageData.map((item) => (
-              <TableRow
-                key={item.slug}
-                noBorder={true}
-                className={`hover:bg-gray-100 ${
-                  selectedRows.includes(item.slug)
-                    ? "border-l-2 border-orange-400"
-                    : ""
-                }`}
-              >
-                <TableCell>
-                  <div className="ml-10">
-                    <Checkbox
-                      checked={selectedRows.includes(item.slug)}
-                      onCheckedChange={() => handleRowSelect(item.slug)}
-                    />
-                  </div>
-                </TableCell>
-                <TableCell>{item.name}</TableCell>
-                <TableCell>{item.slug}</TableCell>
-                <TableCell>
-                  {item.visibility ? (
-                    <span className="text-green-500">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        viewBox="0 0 24 24"
-                        fill="currentColor"
-                        className="w-4 h-4"
-                      >
-                        <path
-                          fillRule="evenodd"
-                          d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12zm13.36-1.814a.75.75 0 1 0-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 0 0-1.06 1.06l2.25 2.25a.75.75 0 0 0 1.14-.094l3.75-5.25z"
-                          clipRule="evenodd"
-                        />
-                      </svg>
-                    </span>
-                  ) : (
-                    <span className="text-red-500">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        viewBox="0 0 24 24"
-                        fill="currentColor"
-                        className="w-4 h-4"
-                      >
-                        <path
-                          fillRule="evenodd"
-                          d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25zm-1.72 6.97a.75.75 0 1 0-1.06 1.06L12 12.75l-2.78 2.78a.75.75 0 1 0 1.06 1.06L13.06 13.8l2.78 2.78a.75.75 0 1 0 1.06-1.06L14.1 12.75l2.78-2.78a.75.75 0 1 0-1.06-1.06L13.06 11.7l-2.78-2.78z"
-                          clipRule="evenodd"
-                        />
-                      </svg>
-                    </span>
-                  )}
-                </TableCell>
-                <TableCell>
-                  {format(new Date(item.updated_at), "yyyy-MM-dd")}
-                </TableCell>
-                <TableCell className="flex space-x-2">
-                  <div className="flex space-x-2">
-                    <div className="flex items-center space-x-[-10px]">
-                      <EyeIcon className="text-[#A2A2AB] h-4 w-4" />
-                      <Button
-                        onClick={() => handleViewClick(item.slug)}
-                        className="text-[#A2A2AB]"
-                        variant="link"
-                        size="sm"
-                      >
-                        View
-                      </Button>
-                    </div>
-                    <div className="flex items-center space-x-[-10px]">
-                      <PencilSquareIcon className="text-orange-500 h-4 w-4" />
-                      <Button
-                        className="text-orange-500"
-                        variant="link"
-                        size="sm"
-                        onClick={() => {
-                          setSelectedCategoryToEdit(item);
-                          setEditDialogOpen(true);
-                        }}
-                      >
-                        Edit
-                      </Button>
-                    </div>
-                    <div className="flex items-center space-x-[-10px]">
-                      <TrashIcon className="text-red-500 h-4 w-4" />
-                      <Button
-                        className="text-red-500"
-                        variant="link"
-                        size="sm"
-                        onClick={() => handleDeleteClick(item.slug)}
-                      >
-                        Delete
-                      </Button>
-                    </div>
-                  </div>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-          <TableFooter>
-            <TableRow>
-              <TableCell colSpan={3}>
-                <div className="flex justify-between items-center ml-6 p-3">
+          ))}
+        </TableBody>
+        <TableFooter>
+          <TableRow>
+            <TableCell colSpan={8}>
+              <div className="flex flex-col sm:flex-row justify-between items-center">
+                <div className="flex justify-between items-center ml-2 sm:ml-6 p-3 w-full">
                   <div>
-                    Showing {start + 1} to {Math.min(end, data.length)} of{" "}
-                    {data.length} results
+                    Showing {start + 1} to {Math.min(end, filteredData.length)} of{" "}
+                    {filteredData.length} results
                   </div>
                   <div className="flex items-center space-x-4">
                     <Select
@@ -300,37 +318,54 @@ const [selectedCategoryToEdit, setSelectedCategoryToEdit] = useState(null);
                     />
                   </div>
                 </div>
-              </TableCell>
-            </TableRow>
-          </TableFooter>
-        </Table>
-        <DeleteMessageDialog
-          open={deleteDialogOpen}
-          onOpenChange={setDeleteDialogOpen}
-          onConfirm={handleConfirmDelete}
-          onCancel={handleCancelDelete}
-          title="Delete Category"
-          description="Are you sure you want to delete this category?"
-        />
-        <ViewCategoryDialog
-          open={viewDialogOpen}
-          onOpenChange={setViewDialogOpen}
-          category={selectedCategory}
-          onClose={handleCloseView}
-        />
-        <EditCategoryDialog
-          open={editDialogOpen}
-          onOpenChange={setEditDialogOpen}
-          category={selectedCategoryToEdit}
-          onCategoryUpdated={() => {
-            // Refresh your category data here
-            fetch("http://localhost:5000/api/categories")
-              .then((response) => response.json())
-              .then((result) => setData(result));
-          }}
-        />
-      </div>
+                <div className="flex items-center space-x-4 p-3">
+                  <Button
+                    disabled={page === 1}
+                    onClick={() => handlePageChange(page - 1)}
+                  >
+                    Previous
+                  </Button>
+                  <Button
+                    disabled={page === totalPages}
+                    onClick={() => handlePageChange(page + 1)}
+                  >
+                    Next
+                  </Button>
+                  </div>
+              </div>
+            </TableCell>
+          </TableRow>
+        </TableFooter>
+      </Table>
     </div>
+    <DeleteMessageDialog
+      open={deleteDialogOpen}
+      onOpenChange={setDeleteDialogOpen}
+      onConfirm={handleConfirmDelete}
+      onCancel={handleCancelDelete}
+      title="Delete Category"
+      slug={selectedCategorySlug}
+      description="Are you sure you want to delete this category?"
+    />
+    <ViewCategoryDialog
+      open={viewDialogOpen}
+      onOpenChange={setViewDialogOpen}
+      category={selectedCategory}
+      onClose={handleCloseView}
+    />
+    <EditCategoryDialog
+      open={editDialogOpen}
+      onOpenChange={setEditDialogOpen}
+      category={selectedCategoryToEdit}
+      onCategoryUpdated={() => {
+        fetch("http://localhost:5000/api/categories")
+          .then((response) => response.json())
+          .then((result) => setData(result));
+      }}
+    />
+  </div>
+</div>
+
   );
 };
 

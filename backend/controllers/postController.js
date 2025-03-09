@@ -49,15 +49,16 @@ exports.getPostBySlug = async (req, res) => {
 exports.createPost = async (req, res) => {
     const { title, content, category_id, image_path, tags, published_at } = req.body;
     const slug = slugify(title, { lower: true });
-    
+    const status = published_at ? 'published' : 'draft'; // Determine status
+
     try {
         // Ensure slug is unique
         const [existing] = await pool.query("SELECT * FROM posts WHERE slug = ?", [slug]);
         if (existing.length > 0) return res.status(400).json({ error: 'Slug already exists' });
 
         await pool.query(
-            "INSERT INTO posts (title, slug, content, category_id, image_path, tags, published_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
-            [title, slug, content, category_id, image_path, JSON.stringify(tags), published_at || null]
+            "INSERT INTO posts (title, slug, content, category_id, image_path, tags, published_at,status) VALUES (?, ?, ?, ?, ?, ?, ?,?)",
+            [title, slug, content, category_id, image_path, JSON.stringify(tags), published_at || null, status] 
         );
         res.status(201).json({ message: 'Post created' });
     } catch (error) {

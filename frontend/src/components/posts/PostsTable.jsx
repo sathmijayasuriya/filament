@@ -23,7 +23,8 @@ import {
 } from "@/components/ui/table";
 import { getStorage, ref, getDownloadURL } from "firebase/storage";
 import { app } from "../../firebase";
-import { useNavigate } from "react-router-dom"; // Import useNavigate
+import { useNavigate } from "react-router-dom"; 
+import { toast } from "react-hot-toast";
 
 const PostsTable = () => {
 
@@ -31,7 +32,9 @@ const PostsTable = () => {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const navigate = useNavigate(); // Initialize useNavigate
+  const navigate = useNavigate(); 
+  const [searchTerm, setSearchTerm] = useState('');
+  
 
   useEffect(() => {
     const fetchData = async () => {
@@ -58,7 +61,7 @@ const PostsTable = () => {
   const [columnVisibility, setColumnVisibility] = useState({});
   const [rowSelection, setRowSelection] = useState({});
   const [perPage, setPerPage] = useState(5);
-
+  const [currentPage, setCurrentPage] = useState(1); 
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
 
@@ -78,12 +81,30 @@ const PostsTable = () => {
           .then((result) => setData(result));
   };
   
-  const handleConfirmDelete = () => {
-    // Perform delete action here using selectedRowId
-    console.log("Deleting row with ID:", selectedPostSlug);
-    setDeleteDialogOpen(false);
-    selectedPostSlug(null);
-  };
+  
+  const handleConfirmDelete = async () => {
+    try {
+        const response = await fetch(`http://localhost:5000/api/posts/delete/${selectedPostSlug}`, {
+            method: "DELETE",
+        });
+
+        if (response.ok) {
+             setData(prevData => prevData.filter(post => post.slug !== selectedPostSlug)); // Optimized state update
+            // const result = await fetch("http://localhost:5000/api/posts/posts")
+            navigate("/posts");
+            toast.success("Post deleted successfully!");
+        } else {
+            const errorData = await response.json();
+            toast.error(errorData.error || "Failed to delete post.");
+        }
+        setDeleteDialogOpen(false);
+        setSelectedPostSlug(null);
+    } catch (error) {
+        console.error("Error deleting post:", error);
+        toast.error("An error occurred while deleting the post.");
+    }
+};
+
 
   //edit
 
@@ -179,11 +200,16 @@ const PostsTable = () => {
       },
       cell: ({ row }) => {
         const status = row.original.status;
-        let badgeColor = "bg-green-100 text-green-800 border-green-200";
-
+        let badgeColor = ""; // Initialize with an empty string
+      
         if (status === "Draft") {
-          badgeColor = "bg-orange-100 text-orange-800 border-orange-200";
+          badgeColor = "bg-orange-100 text-orange-600 border-orange-200"; // Use orange-500 for published
+        } else if (status === "published") {
+          badgeColor = "bg-green-100 text-green-600 border-green-200";
+        } else {
+          badgeColor = "bg-orange-100 text-orange-600 border-orange-200"; // Use orange-500 for published
         }
+      
         return <Badge className={`${badgeColor}`}>{status}</Badge>;
       },
     },
@@ -228,7 +254,6 @@ const PostsTable = () => {
           </div>
           <div className="flex items-center space-x-[-10px]">
             <PencilSquareIcon className="text-orange-500 h-4 w-4" />
-            <PencilSquareIcon className="text-orange-500 h-4 w-4" />
             <Button
               className="text-orange-500"
               variant="link"
@@ -263,17 +288,34 @@ const PostsTable = () => {
       columnFilters,
       columnVisibility,
       rowSelection,
-    },
+      pagination: {
+        pageIndex: currentPage - 1,
+        pageSize: perPage,
+      },
+      onPaginationChange: (updater) => {
+        const newPagination =
+          typeof updater === "function"
+            ? updater(table.getState().pagination)
+            : updater;
+        setCurrentPage(newPagination.pageIndex + 1); 
+        table.setPageIndex(newPagination.pageIndex); 
+      },
+    }    
   });
-  const filteredData = data.filter((post) => {
-    if (post.published_at) {
-      const postDate = new Date(post.published_at);
-      if (startDate && postDate < new Date(startDate)) return false;
-      if (endDate && postDate > new Date(endDate)) return false;
-      return true;
-    }
-    return true; //if no published_at, show the post.
-  });
+
+  // const filteredData = data.filter((post) => {
+  //   if (post.published_at) {
+  //     const postDate = new Date(post.published_at);
+  //     if (startDate && postDate < new Date(startDate)) return false;
+  //     if (endDate && postDate > new Date(endDate)) return false;
+  //     return true;
+  //   }
+  //   return true; //if no published_at, show the post.
+  // });
+
+  // const searchData = data.filter((item) =>
+  //   item.name.toLowerCase().includes(searchTerm.toLowerCase())
+  // );
 
   //row count
   const selectedRowCount = Object.keys(rowSelection).length;
@@ -294,7 +336,10 @@ const PostsTable = () => {
       <div className="rounded-md border bg-white">
         <div className=" border-b">
           <div className="flex justify-end items-center py-1 my-3 mx-5 space-x-2 ">
-            <Input placeholder="Search" className="w-[300px]" />
+            <Input placeholder="Search"
+                   className="w-[300px]" 
+                   onChange={(e) => setSearchTerm(e.target.value)} 
+/>
             <Menubar>
               <MenubarMenu>
                 <MenubarTrigger>
@@ -390,8 +435,16 @@ const PostsTable = () => {
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => (
-                  <TableCell key={header.id} className="px-4 py-2 text-left font-medium">
-                    {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
+                  <TableCell
+                    key={header.id}
+                    className="px-4 py-2 text-left font-medium"
+                  >
+                    {header.isPlaceholder
+                      ? null
+                      : flexRender(
+                          header.column.columnDef.header,
+                          header.getContext()
+                        )}
                   </TableCell>
                 ))}
               </TableRow>
@@ -402,13 +455,13 @@ const PostsTable = () => {
               <TableRow
                 noBorder={true}
                 key={row.id}
-                className={`hover:bg-gray-100 ${row.getIsSelected() ? "border-l-2 border-orange-400" : ""}`}
+                className={`hover:bg-gray-100 ${
+                  row.getIsSelected() ? "border-l-2 border-orange-400" : ""
+                } cursor-pointer`}
+                // onClick={() => navigate(`/posts/${row.original.slug}`)} 
               >
                 {row.getVisibleCells().map((cell) => (
-                  <TableCell
-                    key={cell.id}
-                    className="px-4 py-6 text-left"
-                  >
+                  <TableCell key={cell.id} className="px-4 py-6 text-left">
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
                   </TableCell>
                 ))}
@@ -418,12 +471,15 @@ const PostsTable = () => {
         </Table>
 
         <DeleteMessageDialog
-    open={deleteDialogOpen}
-    onOpenChange={setDeleteDialogOpen}
-    slug={selectedPostSlug}
-    onPostDeleted={handlePostDeleted}
-    onCancel={() => setDeleteDialogOpen(false)}
-/>
+          open={deleteDialogOpen}
+          onOpenChange={setDeleteDialogOpen}
+          slug={selectedPostSlug}
+          onPostDeleted={handlePostDeleted}
+          onConfirm={handleConfirmDelete}
+          onCancel={() => setDeleteDialogOpen(false)}
+          title="Delete Post"
+          description="Are you sure you want to delete this post?"
+        />
 
         <div className="flex justify-between items-center  py-1 my-3 mx-5 ">
           {/* 1 */}
@@ -445,7 +501,10 @@ const PostsTable = () => {
           {/* 2 */}
           <Select
             value={perPage.toString()}
-            onValueChange={(value) => setPerPage(parseInt(value))}
+            onValueChange={(value) => {
+              setPerPage(parseInt(value));
+              setCurrentPage(1);
+            }}
           >
             <SelectTrigger className="w-[120px]">
               <SelectValue placeholder="Per page" />
@@ -458,26 +517,45 @@ const PostsTable = () => {
           </Select>
           {/* 3 */}
           <div className="w-auto bgcolor-none">
-            <Pagination
-              onPageChange={(page) => table.setPageIndex(page - 1)}
-              currentPage={table.getState().pagination.pageIndex + 1}
-              totalPages={table.getPageCount()}
-            >
+            <Pagination>
               <PaginationContent>
-                <PaginationPrevious>Previous</PaginationPrevious>
-                <PaginationItem page={1} />
-                <PaginationEllipsis />
-                <PaginationItem page={table.getState().pagination.pageIndex} />
-                <PaginationItem
-                  page={table.getState().pagination.pageIndex + 1}
-                  active
-                />
-                <PaginationItem
-                  page={table.getState().pagination.pageIndex + 2}
-                />
-                <PaginationEllipsis />
-                <PaginationItem page={table.getPageCount()} />
-                <PaginationNext>Next</PaginationNext>
+                <PaginationItem>
+                  <PaginationPrevious
+                    onClick={() => {
+                      if (currentPage > 1) {
+                        setCurrentPage((prev) => prev - 1);
+                        table.setPageIndex(currentPage - 2); // Adjust because pageIndex is 0-based
+                      }
+                    }}
+                    disabled={currentPage === 1}
+                  />
+                </PaginationItem>
+
+                {Array.from({ length: table.getPageCount() }, (_, i) => (
+                  <PaginationItem key={i}>
+                    <PaginationLink
+                      isActive={i + 1 === currentPage}
+                      onClick={() => {
+                        setCurrentPage(i + 1);
+                        table.setPageIndex(i);
+                      }}
+                    >
+                      {i + 1}
+                    </PaginationLink>
+                  </PaginationItem>
+                ))}
+
+                <PaginationItem>
+                  <PaginationNext
+                    onClick={() => {
+                      if (currentPage < table.getPageCount()) {
+                        setCurrentPage((prev) => prev + 1);
+                        table.setPageIndex(currentPage);
+                      }
+                    }}
+                    disabled={currentPage === table.getPageCount()}
+                  />
+                </PaginationItem>
               </PaginationContent>
             </Pagination>
           </div>
