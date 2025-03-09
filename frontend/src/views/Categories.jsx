@@ -10,7 +10,7 @@ import CategoryTable from '../components/categories/CategoryTable';
   };
 
   return (
-    <div className="m-1 mx-40"> 
+    <div className="m-2 mx-40"> 
             <CategoryHeader onCategoryCreated={handleCategoryCreated} />
             <CategoryTable categoryCreated={categoryCreated} />
     </div>

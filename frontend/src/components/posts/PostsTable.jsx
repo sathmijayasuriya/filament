@@ -1,34 +1,28 @@
 import { Button } from "@/components/ui/button";
-import { FunnelIcon, ViewColumnsIcon, EyeIcon, PencilSquareIcon, TrashIcon } from "@heroicons/react/24/solid";
+import { EyeIcon, PencilSquareIcon, TrashIcon } from "@heroicons/react/24/solid";
 import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
 import { flexRender, getCoreRowModel, getFilteredRowModel, getPaginationRowModel, getSortedRowModel, useReactTable } from "@tanstack/react-table";
 import { ArrowUpDown } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
-import { useState, useEffect } from "react";
+import { useState, useEffect,useMemo,useCallback } from "react";
 import { Badge } from "@/components/ui/badge";
-import { Calendar } from "@/components/ui/calendar";
-import { CalendarIcon } from "lucide-react";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Menubar, MenubarContent, MenubarItem, MenubarMenu, MenubarSeparator, MenubarShortcut, MenubarTrigger } from "@/components/ui/menubar";
 import DeleteMessageDialog from "./DeleteMessageDialog";
 import {
   Table,
-  TableHeader,
   TableBody,
   TableRow,
   TableCell,
-  TableFooter,
 } from "@/components/ui/table";
 import { getStorage, ref, getDownloadURL } from "firebase/storage";
 import { app } from "../../firebase";
 import { useNavigate } from "react-router-dom"; 
 import { toast } from "react-hot-toast";
+import PostsTableHeader from "./PostsTableHeader";
+import PostsTablePagination from "./PostsTablePagination ";
 
 const PostsTable = () => {
 
-  
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -69,44 +63,39 @@ const PostsTable = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedPostSlug, setSelectedPostSlug] = useState(null);
   
-  const handleDeleteClick = (slug) => {
-      setSelectedPostSlug(slug);
-      setDeleteDialogOpen(true);
-  };
+  const handleDeleteClick = useCallback((slug) => {
+    setSelectedPostSlug(slug);
+    setDeleteDialogOpen(true);
+  }, []);
+
+  const handlePostDeleted = useCallback(() => {
+    fetch("http://localhost:5000/api/posts/posts")
+      .then((response) => response.json())
+      .then((result) => setData(result));
+  }, []);
   
-  const handlePostDeleted = () => {
-    // Refresh your post data here
-      fetch("http://localhost:5000/api/posts/posts")
-          .then((response) => response.json())
-          .then((result) => setData(result));
-  };
   
-  
-  const handleConfirmDelete = async () => {
+  const handleConfirmDelete = useCallback(async () => {
     try {
-        const response = await fetch(`http://localhost:5000/api/posts/delete/${selectedPostSlug}`, {
-            method: "DELETE",
-        });
-
-        if (response.ok) {
-             setData(prevData => prevData.filter(post => post.slug !== selectedPostSlug)); // Optimized state update
-            // const result = await fetch("http://localhost:5000/api/posts/posts")
-            navigate("/posts");
-            toast.success("Post deleted successfully!");
-        } else {
-            const errorData = await response.json();
-            toast.error(errorData.error || "Failed to delete post.");
-        }
-        setDeleteDialogOpen(false);
-        setSelectedPostSlug(null);
+      const response = await fetch(`http://localhost:5000/api/posts/delete/${selectedPostSlug}`, {
+        method: "DELETE",
+      });
+      if (response.ok) {
+        setData((prevData) => prevData.filter((post) => post.slug !== selectedPostSlug));
+        navigate("/posts");
+        toast.success("Post deleted successfully!");
+      } else {
+        const errorData = await response.json();
+        toast.error(errorData.error || "Failed to delete post.");
+      }
+      setDeleteDialogOpen(false);
+      setSelectedPostSlug(null);
     } catch (error) {
-        console.error("Error deleting post:", error);
-        toast.error("An error occurred while deleting the post.");
+      console.error("Error deleting post:", error);
+      toast.error("An error occurred while deleting the post.");
     }
-};
+  }, [navigate, selectedPostSlug]);
 
-
-  //edit
 
   const columns = [
     {
@@ -319,117 +308,26 @@ const PostsTable = () => {
 
   //row count
   const selectedRowCount = Object.keys(rowSelection).length;
-  const hasSelectedRows = selectedRowCount > 0;
-
-  const handleSelectAll = () => {
-    table.toggleAllPageRowsSelected(true);
-  };
-
-  const handleDeselectAll = () => {
-    table.toggleAllPageRowsSelected(false);
-  };
+ 
   if (loading) return <div>Loading...</div>;
   if (error) return <div>Error: {error.message}</div>;
 
   return (
     <div className="p-4">
       <div className="rounded-md border bg-white">
-        <div className=" border-b">
-          <div className="flex justify-end items-center py-1 my-3 mx-5 space-x-2 ">
-            <Input placeholder="Search"
-                   className="w-[300px]" 
-                   onChange={(e) => setSearchTerm(e.target.value)} 
-/>
-            <Menubar>
-              <MenubarMenu>
-                <MenubarTrigger>
-                  <FunnelIcon className="text-[#A2A2AB] h-6 w-6 hover:text-gray-500" />
-                </MenubarTrigger>
-                <MenubarContent align="start" side="bottom">
-                  <div className="p-4 space-y-4">
-                    <div className="flex flex-col">
-                      <label>From</label>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <Button
-                            variant={"outline"}
-                            className="w-[240px] justify-start text-left font-normal"
-                          >
-                            <CalendarIcon className="mr-2 h-4 w-4" />
-                            {startDate ? (
-                              startDate.toLocaleDateString()
-                            ) : (
-                              <span>Pick a date</span>
-                            )}
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
-                          <Calendar
-                            selectedDate={startDate}
-                            onDateChange={setStartDate}
-                          />
-                        </PopoverContent>
-                      </Popover>
-                    </div>
-                    <div className="flex flex-col">
-                      <label>Until</label>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <Button
-                            variant={"outline"}
-                            className="w-[240px] justify-start text-left font-normal"
-                          >
-                            <CalendarIcon className="mr-2 h-4 w-4" />
-                            {endDate ? (
-                              endDate.toLocaleDateString()
-                            ) : (
-                              <span>Pick a date</span>
-                            )}
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
-                          <Calendar
-                            selectedDate={endDate}
-                            onDateChange={setEndDate}
-                          />
-                        </PopoverContent>
-                      </Popover>
-                    </div>
-                  </div>
-                </MenubarContent>
-              </MenubarMenu>
-            </Menubar>
-            <ViewColumnsIcon className="text-[#A2A2AB] h-6 w-6 hover:text-gray-500" />
-          </div>
-          {/*row count */}
-          {hasSelectedRows && (
-            <div className="border-t">
-              <div className="flex justify-between items-center mx-3 py-1 my-3 space-x-2">
-                <span className="text-gray-600 font-semibold">
-                  {selectedRowCount} records selected
-                </span>
-                <div>
-                  <Button
-                    className="text-orange-500"
-                    variant="link"
-                    size="sm"
-                    onClick={handleSelectAll}
-                  >
-                    Select all
-                  </Button>
-                  <Button
-                    className="text-red-500"
-                    variant="link"
-                    size="sm"
-                    onClick={handleDeselectAll}
-                  >
-                    Deselect all
-                  </Button>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
+
+        <PostsTableHeader
+          table={table}
+          searchTerm={searchTerm}
+          setSearchTerm={setSearchTerm}
+          startDate={startDate}
+          setStartDate={setStartDate}
+          endDate={endDate}
+          setEndDate={setEndDate}
+          rowSelection={rowSelection}
+          setRowSelection={setRowSelection}
+        />
+
         <Table>
           <thead className="border-b">
             {table.getHeaderGroups().map((headerGroup) => (
@@ -480,86 +378,14 @@ const PostsTable = () => {
           title="Delete Post"
           description="Are you sure you want to delete this post?"
         />
+        <PostsTablePagination
+          table={table}
+          currentPage={currentPage}
+          setCurrentPage={setCurrentPage}
+          perPage={perPage}
+          setPerPage={setPerPage}
+        />
 
-        <div className="flex justify-between items-center  py-1 my-3 mx-5 ">
-          {/* 1 */}
-          <div>
-            <p className="w-[max-content]">
-              Showing{" "}
-              {table.getState().pagination.pageIndex *
-                table.getState().pagination.pageSize +
-                1}{" "}
-              to{" "}
-              {Math.min(
-                (table.getState().pagination.pageIndex + 1) *
-                  table.getState().pagination.pageSize,
-                table.getRowModel().rows.length
-              )}{" "}
-              of {table.getRowModel().rows.length} results
-            </p>
-          </div>
-          {/* 2 */}
-          <Select
-            value={perPage.toString()}
-            onValueChange={(value) => {
-              setPerPage(parseInt(value));
-              setCurrentPage(1);
-            }}
-          >
-            <SelectTrigger className="w-[120px]">
-              <SelectValue placeholder="Per page" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="5">5</SelectItem>
-              <SelectItem value="10">10</SelectItem>
-              <SelectItem value="20">20</SelectItem>
-            </SelectContent>
-          </Select>
-          {/* 3 */}
-          <div className="w-auto bgcolor-none">
-            <Pagination>
-              <PaginationContent>
-                <PaginationItem>
-                  <PaginationPrevious
-                    onClick={() => {
-                      if (currentPage > 1) {
-                        setCurrentPage((prev) => prev - 1);
-                        table.setPageIndex(currentPage - 2); // Adjust because pageIndex is 0-based
-                      }
-                    }}
-                    disabled={currentPage === 1}
-                  />
-                </PaginationItem>
-
-                {Array.from({ length: table.getPageCount() }, (_, i) => (
-                  <PaginationItem key={i}>
-                    <PaginationLink
-                      isActive={i + 1 === currentPage}
-                      onClick={() => {
-                        setCurrentPage(i + 1);
-                        table.setPageIndex(i);
-                      }}
-                    >
-                      {i + 1}
-                    </PaginationLink>
-                  </PaginationItem>
-                ))}
-
-                <PaginationItem>
-                  <PaginationNext
-                    onClick={() => {
-                      if (currentPage < table.getPageCount()) {
-                        setCurrentPage((prev) => prev + 1);
-                        table.setPageIndex(currentPage);
-                      }
-                    }}
-                    disabled={currentPage === table.getPageCount()}
-                  />
-                </PaginationItem>
-              </PaginationContent>
-            </Pagination>
-          </div>
-        </div>
       </div>
     </div>
   );
