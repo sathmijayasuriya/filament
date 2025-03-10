@@ -6,7 +6,7 @@ export default function Layout() {
   
   return (
 <div className="flex h-screen w-full">
-  <div className="w-full sm:w-80 h-screen fixed top-20  left-0 -white">
+  <div className="w-full sm:w-80 h-screen fixed top-20  left-0 bg-gray-100">
     <Sidebar />
   </div>
 

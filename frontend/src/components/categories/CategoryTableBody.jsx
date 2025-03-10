@@ -26,7 +26,7 @@ const CategoryTableBody = ({
               : ""
           }`}
         >
-          <TableCell>
+          <TableCell className="border-b">
             <div className="ml-10">
               <Checkbox
                 checked={selectedRows.includes(item.slug)}
@@ -34,9 +34,9 @@ const CategoryTableBody = ({
               />
             </div>
           </TableCell>
-          <TableCell>{item.name}</TableCell>
-          <TableCell>{item.slug}</TableCell>
-          <TableCell>
+          <TableCell className="border-b">{item.name}</TableCell>
+          <TableCell className="border-b">{item.slug}</TableCell>
+          <TableCell className="border-b">
             {item.visibility ? (
               <span className="text-green-500">
                 <svg
@@ -69,10 +69,10 @@ const CategoryTableBody = ({
               </span>
             )}
           </TableCell>
-          <TableCell>
+          <TableCell className="border-b">
             {format(new Date(item.updated_at), "yyyy-MM-dd")}
           </TableCell>
-          <TableCell className="flex space-x-2">
+          <TableCell className="flex space-x-2 border-b">
             <div className="flex space-x-2">
               <div className="flex items-center space-x-[-10px]">
                 <EyeIcon className="text-[#A2A2AB] h-4 w-4" />

@@ -8,11 +8,17 @@ exports.getAllPosts = async (req, res) => {
         let query = "SELECT * FROM posts WHERE 1=1";
         let params = [];
 
-        if (from && to) {
-            query += " AND published_at BETWEEN ? AND ?";
-            params.push(from, to);
+        if (from) {
+            query += " AND published_at >= ?";
+            params.push(from);
+        }
+        if (to) {
+            query += " AND published_at <= ?";
+            params.push(to);
         }
 
+        console.log("Query:", query);
+        console.log("Params:", params);  
         const [rows] = await pool.query(query, params);
         res.json(rows);
     } catch (error) {
@@ -20,6 +26,7 @@ exports.getAllPosts = async (req, res) => {
         res.status(500).json({ error: 'Internal server error' });
     }
 };
+
 
 // 🔹 Get a Single Post by Slug// 🔹 Get a Single Post by Slug with Category Name
 exports.getPostBySlug = async (req, res) => {
