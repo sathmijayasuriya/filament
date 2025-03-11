@@ -1,24 +1,44 @@
 const slugify = require('slugify');
 const pool = require('../db');
 
-// 🔹 Get All Posts (With Filtering)
+// Get All Posts (With Filtering)
 exports.getAllPosts = async (req, res) => {
     try {
         const { from, to } = req.query;
-        let query = "SELECT * FROM posts WHERE 1=1";
+        let query = `
+            SELECT 
+                posts.id, 
+                posts.title, 
+                posts.slug AS post_slug, 
+                posts.content, 
+                posts.image_path, 
+                posts.tags, 
+                posts.published_at, 
+                posts.status, 
+                posts.created_at, 
+                posts.updated_at, 
+                categories.name AS category_name
+            FROM posts
+            LEFT JOIN categories ON posts.category_id = categories.id
+            WHERE 1=1
+        `;
         let params = [];
 
         if (from) {
-            query += " AND published_at >= ?";
-            params.push(from);
+            // Convert 'from' to a valid TIMESTAMP format
+            const fromTimestamp = new Date(from);
+            query += " AND posts.published_at >= ?";
+            params.push(fromTimestamp);
         }
         if (to) {
-            query += " AND published_at <= ?";
-            params.push(to);
+            // Convert 'to' to a valid TIMESTAMP format
+            const toTimestamp = new Date(to);
+            query += " AND posts.published_at <= ?";
+            params.push(toTimestamp);
         }
 
         console.log("Query:", query);
-        console.log("Params:", params);  
+        console.log("Params:", params);
         const [rows] = await pool.query(query, params);
         res.json(rows);
     } catch (error) {
@@ -27,8 +47,7 @@ exports.getAllPosts = async (req, res) => {
     }
 };
 
-
-// 🔹 Get a Single Post by Slug// 🔹 Get a Single Post by Slug with Category Name
+// Get a Single Post by Slug
 exports.getPostBySlug = async (req, res) => {
     const { slug } = req.params;
     try {
@@ -52,29 +71,32 @@ exports.getPostBySlug = async (req, res) => {
     }
 };
 
-// 🔹 Create a New Post
+//  Create a New Post
 exports.createPost = async (req, res) => {
     const { title, content, category_id, image_path, tags, published_at } = req.body;
     const slug = slugify(title, { lower: true });
-    const status = published_at ? 'published' : 'draft'; // Determine status
+
+    console.log("Received published_at:", published_at);
+    const status = published_at && published_at.trim() !== "" ? 'published' : 'draft';
 
     try {
-        // Ensure slug is unique
         const [existing] = await pool.query("SELECT * FROM posts WHERE slug = ?", [slug]);
         if (existing.length > 0) return res.status(400).json({ error: 'Slug already exists' });
 
+        // Insert the post into the database
         await pool.query(
-            "INSERT INTO posts (title, slug, content, category_id, image_path, tags, published_at,status) VALUES (?, ?, ?, ?, ?, ?, ?,?)",
-            [title, slug, content, category_id, image_path, JSON.stringify(tags), published_at || null, status] 
+            "INSERT INTO posts (title, slug, content, category_id, image_path, tags, published_at, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+            [title, slug, content, category_id, image_path, JSON.stringify(tags), published_at || null, status]
         );
-        res.status(201).json({ message: 'Post created' });
+
+        res.status(201).json({ message: 'Post created', status });
     } catch (error) {
-        console.error(error);
+        console.error("Error creating post:", error);
         res.status(500).json({ error: 'Internal server error' });
     }
 };
 
-// 🔹 Update a Post
+//  Update a Post
 exports.updatePost = async (req, res) => {
     const { slug } = req.params;
     const { title, content, category_id, image_path, tags, published_at } = req.body;
@@ -96,7 +118,7 @@ exports.updatePost = async (req, res) => {
     }
 };
 
-// 🔹 Delete a Post
+//  Delete a Post
 exports.deletePost = async (req, res) => {
     const { slug } = req.params;
     try {

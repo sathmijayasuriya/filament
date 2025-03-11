@@ -1,10 +1,8 @@
-  import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
   import { EyeIcon, PencilSquareIcon, TrashIcon } from "@heroicons/react/24/solid";
-  import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
   import { flexRender, getCoreRowModel, getFilteredRowModel, getPaginationRowModel, getSortedRowModel, useReactTable } from "@tanstack/react-table";
   import { ArrowUpDown } from "lucide-react";
   import { Checkbox } from "@/components/ui/checkbox";
-  import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
   import { useState, useEffect,useMemo,useCallback } from "react";
   import { Badge } from "@/components/ui/badge";
   import DeleteMessageDialog from "./DeleteMessageDialog";
@@ -28,14 +26,17 @@
     const [error, setError] = useState(null);
     const [sorting, setSorting] = useState([]);
     const [columnFilters, setColumnFilters] = useState([]);
-    const [columnVisibility, setColumnVisibility] = useState({});
+    // const [columnVisibility, setColumnVisibility] = useState({});
     const [rowSelection, setRowSelection] = useState({});
     const [perPage, setPerPage] = useState(5);
     const [currentPage, setCurrentPage] = useState(1); 
     const [startDate, setStartDate] = useState(null);
     const [endDate, setEndDate] = useState(null);
     const navigate = useNavigate();   
-
+    const [columnVisibility, setColumnVisibility] = useState({
+      category_name: false,
+      post_slug: false,
+    });  
     const formatLocalDate = (date) => {
       const year = date.getFullYear();
       const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -44,7 +45,8 @@
     };
         
     useEffect(() => {
-      setCurrentPage(1); // Reset to the first page
+      // setCurrentPage(1); // Reset to the first page
+      // setLoading(true);
       const fetchData = async () => {
         try {
           const url = new URL("http://localhost:5000/api/posts/posts");
@@ -75,6 +77,7 @@
       console.log("End Date:", endDate);    
     }, [startDate, endDate]);
 
+    
     //delete
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const [selectedPostSlug, setSelectedPostSlug] = useState(null);
@@ -192,6 +195,16 @@
         },
       },
       {
+        accessorKey: "post_slug", 
+        header: "Slug",
+        cell: ({ row }) => row.original.post_slug,
+      },
+      {
+        accessorKey: "category_name",
+        header: "Category",
+        cell: ({ row }) => row.original.category_name,
+      },
+      {
         accessorKey: "status",
         header: ({ column }) => {
           return (
@@ -253,7 +266,7 @@
                 className="text-[#A2A2AB]"
                 variant="link"
                 size="sm"
-                onClick={() => navigate(`/posts/${row.original.slug}`)} // Navigate to the post view
+                onClick={() => navigate(`/posts/${row.original.post_slug}`)} // Navigate to the post view
               >
                 View
               </Button>
@@ -264,7 +277,7 @@
                 className="text-orange-500"
                 variant="link"
                 size="sm"
-                onClick={() => navigate(`/posts/edit/${row.original.slug}`)} // Navigate to the edit page
+                onClick={() => navigate(`/posts/edit/${row.original.post_slug}`)} // Navigate to the edit page
               >
                 Edit
               </Button>
@@ -277,6 +290,7 @@
         ),
       },
     ], [handleDeleteClick, navigate]);
+
     const table = useReactTable({
       data,
       columns,
@@ -314,8 +328,7 @@
 
     return (
       <div className="p-4">
-        <div className="rounded-md border bg-white">
-
+        <div className="rounded-md border bg-white " >
           <PostsTableHeader
             table={table}
             startDate={startDate}
@@ -326,8 +339,8 @@
             setRowSelection={setRowSelection}
             data={data}
           />
-
-          <Table>
+    <div className="w-full overflow-x-auto">
+    <Table className="w-full min-w-[100px] border-collapse">
             <thead className="border-b">
               {table.getHeaderGroups().map((headerGroup) => (
                 <TableRow key={headerGroup.id}>
@@ -347,7 +360,7 @@
                 </TableRow>
               ))}
             </thead>
-            <TableBody>
+            <TableBody >
               {table.getRowModel().rows.map((row) => (
                 <TableRow
                   noBorder={true}
@@ -355,18 +368,24 @@
                   className={`hover:bg-gray-100 ${
                     row.getIsSelected() ? "border-l-2 border-orange-400" : ""
                   } cursor-pointer`}
-                  // onClick={() => navigate(`/posts/${row.original.slug}`)} 
+                  // onClick={() => navigate(`/posts/${row.original.slug}`)}
                 >
                   {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id} className="px-4 py-6 text-left border-b">
-                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                    <TableCell
+                      key={cell.id}
+                      className="px-4 py-6 text-left border-b"
+                    >
+                      {flexRender(
+                        cell.column.columnDef.cell,
+                        cell.getContext()
+                      )}
                     </TableCell>
                   ))}
                 </TableRow>
               ))}
             </TableBody>
           </Table>
-
+          </div>
           <DeleteMessageDialog
             open={deleteDialogOpen}
             onOpenChange={setDeleteDialogOpen}
@@ -383,11 +402,10 @@
             setCurrentPage={setCurrentPage}
             perPage={perPage}
             setPerPage={setPerPage}
-            data={data} 
+            data={data}
             rowSelection={rowSelection}
             setRowSelection={setRowSelection}
           />
-
         </div>
       </div>
     );

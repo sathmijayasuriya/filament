@@ -30,7 +30,7 @@ const Sidebar = () => {
   const [blogOpen, setBlogOpen] = useState(false);
 
   return (
-    <div className="h-screen w-80 bg-gray-100 p-4 mt-6 flex flex-col">
+    <div className="h-screen w-80 bg-gray-100 p-4 mt-6  flex flex-col">
       {/* Dashboard */}
       <NavLink to="/">
         {({ isActive }) => (

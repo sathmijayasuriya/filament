@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
@@ -90,6 +90,20 @@ const PostForm = () => {
       throw error;
     }
   };
+  const cancel = useCallback(() =>{
+    navigate("/posts");
+  },[navigate]);
+
+  const resetForm = () => {
+    setTitle("");
+    setSlug("");
+    setContent("");
+    setCategory({ id: "", name: "" });
+    setPublishedDate(null);
+    setTags("");
+    setImage(null);
+    console.log("data ",setTitle)
+  };
 
   //  submission
   const handleSubmit = async (e) => {
@@ -167,11 +181,13 @@ const PostForm = () => {
           Error: {error}
         </div>
       )}
-      
+
       <div className="w-full p-5 rounded-lg border bg-white">
         <div className="grid grid-cols-2 gap-4 mt-4">
-          <div className="mt-4" >
-            <Label className="mb-3"  htmlFor="title">Title</Label>
+          <div className="mt-4">
+            <Label className="mb-3" htmlFor="title">
+              Title
+            </Label>
             <Input
               type="text"
               id="title"
@@ -181,27 +197,38 @@ const PostForm = () => {
             />
           </div>
           <div className="mt-4">
-          <Label className="mb-3" htmlFor="slug">Slug</Label>
+            <Label className="mb-3" htmlFor="slug">
+              Slug
+            </Label>
             <Input type="text" id="slug" value={slug} readOnly />
           </div>
         </div>
 
         <div className="mt-4">
-          <Label className="mb-3" htmlFor="content">Content</Label>
+          <Label className="mb-3" htmlFor="content">
+            Content
+          </Label>
           <div className="border rounded-lg p-3">
             <RichTextEditor content={content} setContent={setContent} />
           </div>
         </div>
 
         <div className="grid grid-cols-2 gap-4 mt-4">
-        <div className="mt-4">
-            <Label className="mb-3" htmlFor="category">Category</Label>
-            <Select 
+          <div className="mt-4">
+            <Label className="mb-3" htmlFor="category">
+              Category
+            </Label>
+            <Select
               value={category.id}
               onValueChange={(id) => {
-                const selectedCategory = categories.find((cat) => cat.id === id);
+                const selectedCategory = categories.find(
+                  (cat) => cat.id === id
+                );
                 if (selectedCategory) {
-                  setCategory({ id: selectedCategory.id, name: selectedCategory.name });
+                  setCategory({
+                    id: selectedCategory.id,
+                    name: selectedCategory.name,
+                  });
                 }
               }}
               required
@@ -220,13 +247,17 @@ const PostForm = () => {
           </div>
 
           <div className="mt-4">
-            <Label className="mb-3" htmlFor="publishedDate">Published Date</Label>
+            <Label className="mb-3" htmlFor="publishedDate">
+              Published Date
+            </Label>
             <Popover>
               <PopoverTrigger asChild>
                 <div className="relative">
                   <Input
                     type="text"
-                    value={publishedDate ? format(publishedDate, "yyyy-MM-dd") : ""}
+                    value={
+                      publishedDate ? format(publishedDate, "yyyy-MM-dd") : ""
+                    }
                     readOnly
                     className="w-full pr-10"
                   />
@@ -247,7 +278,9 @@ const PostForm = () => {
 
         <div className="grid grid-cols-2 gap-4 mt-4">
           <div className="mt-4">
-            <Label className="mb-4" htmlFor="tags">Tags</Label>
+            <Label className="mb-4" htmlFor="tags">
+              Tags
+            </Label>
             <TagInput value={tags} onChange={setTags} />
           </div>
         </div>
@@ -255,7 +288,9 @@ const PostForm = () => {
 
       {/* Image Upload Section */}
       <div className="bg-white w-full p-5 mt-7 rounded-lg border">
-        <Label className="mb-3" htmlFor="image">Image</Label>
+        <Label className="mb-3" htmlFor="image">
+          Image
+        </Label>
         <ImageUpload onImageChange={setImage} />
         {image && <p className="mt-2">Selected file: {image.name}</p>}
       </div>
@@ -269,10 +304,15 @@ const PostForm = () => {
         >
           {isSubmitting ? "Creating..." : "Create"}
         </Button>
-        <Button type="button" variant="outline">
+        <Button onClick={resetForm} type="button" variant="outline">
           Create & create another
         </Button>
-        <Button type="button" variant="outline">
+        <Button
+          disabled={isSubmitting} 
+          onClick={cancel}
+          type="button"
+          variant="outline"
+        >
           Cancel
         </Button>
       </div>

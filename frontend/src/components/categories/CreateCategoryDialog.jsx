@@ -19,7 +19,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "react-hot-toast"; 
 import { useNavigate } from "react-router-dom"; 
-
+import { useCallback } from "react";
 
 export default function CreateCategoryDialog({ open, onOpenChange, onConfirm, onCancel,onCategoryCreated  }) {
   const [isVisible, setIsVisible] = useState(true);
@@ -72,6 +72,19 @@ export default function CreateCategoryDialog({ open, onOpenChange, onConfirm, on
       }
     };
 
+    //reset
+    const resetForm = () => {
+      setDescription("");
+      setSlug("");
+      setName("");
+      setIsVisible(false);
+    };
+    //cancel
+    const handleCancel = useCallback(() => {
+        onOpenChange(false);
+      }, [onOpenChange]);
+    
+  
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-4xl">
@@ -159,13 +172,13 @@ export default function CreateCategoryDialog({ open, onOpenChange, onConfirm, on
             >
               Create
             </Button>
-            <Button variant="outline" onClick={onCancel}>
+            <Button onClick={handleCancel} variant="outline" onClick={onCancel}>
               Cancel
             </Button>
-            <Button variant="outline">Create & create another</Button>
+            <Button onClick={resetForm} variant="outline">Create & create another</Button>
           </div>
         </div>
       </DialogContent>
-    </Dialog>
+    </Dialog> 
   );
 }

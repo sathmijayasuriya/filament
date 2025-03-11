@@ -9,10 +9,12 @@
     MenubarContent,
     MenubarMenu,
     MenubarTrigger,
+    MenubarItem
   } from "@/components/ui/menubar"
   import { FunnelIcon,ViewColumnsIcon } from "@heroicons/react/24/solid";
-  import React, { useCallback,useMemo } from "react";
+  import React, { useCallback,useMemo ,useState} from "react";
   import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 
   const PostsTableHeader = ({
     table,
@@ -24,6 +26,29 @@
     setRowSelection,    
     data
   }) => {
+    // show cat and slug columns 
+    const [showCategory, setShowCategory] = useState(table.getColumn("category_name")?.getIsVisible() || false);
+    const [showSlug, setShowSlug] = useState(table.getColumn("post_slug")?.getIsVisible() || false);
+      
+    const handleToggleCategory = useCallback(() => {
+      const newVisibility = !showCategory;
+      setShowCategory(newVisibility);
+      table.getColumn("category_name")?.toggleVisibility(newVisibility);
+    }, [showCategory, table]);
+  
+    const handleToggleSlug = useCallback(() => {
+      const newVisibility = !showSlug;
+      setShowSlug(newVisibility);
+      table.getColumn("post_slug")?.toggleVisibility(newVisibility);
+    }, [showSlug, table]);
+    
+    const handleResetColumns = useCallback(() => {
+      setShowCategory(false);
+      setShowSlug(false);
+      table.getColumn("category_name")?.toggleVisibility(false);
+      table.getColumn("post_slug")?.toggleVisibility(false);
+    }, [table]);
+  
     const selectedRowCount = Object.keys(rowSelection).length;
     const hasSelectedRows = selectedRowCount > 0;
 
@@ -58,20 +83,20 @@
     }, [setEndDate, setStartDate]);
 
     return (
-      <div className="border-b">
+      <div className="border-b w-full min-w-[100px] border-collapse">
         <div className="flex justify-end items-center py-1 my-3 mx-5 space-x-2">
           <Input placeholder="Search" className="w-[300px]" />
           <Menubar>
             <MenubarMenu className="w-[200px]">
               <MenubarTrigger>
-              <div className="relative">
-              <FunnelIcon className="text-[#A2A2AB] h-6 w-6 hover:text-gray-500" />
-              {count > 0 && (
+                <div className="relative">
+                  <FunnelIcon className="text-[#A2A2AB] h-6 w-6 hover:text-gray-500" />
+                  {count > 0 && (
                     <Badge className="absolute bottom-5 left-5 flex items-center justify-center border-[rgb(251,238,213)] bg-[rgb(255,251,235)] h-5 w-5 text-xs text-[rgb(217,119,6)]">
                       {count}
                     </Badge>
                   )}
-              </div>
+                </div>
               </MenubarTrigger>
               <MenubarContent align="start" side="bottom">
                 <div className="p-4 space-y-4">
@@ -134,9 +159,40 @@
               </MenubarContent>
             </MenubarMenu>
           </Menubar>
-          <ViewColumnsIcon className="text-[#A2A2AB] h-6 w-6 hover:text-gray-500" />
+          {/* // 2nd menu */}
+          <Menubar>
+            <MenubarMenu className="w-[200px]">
+              <MenubarTrigger>
+                <div className="relative">
+                  <ViewColumnsIcon className="text-[#A2A2AB] h-6 w-6 hover:text-gray-500" />
+                </div>
+              </MenubarTrigger>
+              <MenubarContent align="start" side="bottom">
+                <div className="p-4 space-y-4">
+                  <MenubarItem>
+                    <Checkbox
+                      checked={showSlug}
+                      onCheckedChange={handleToggleSlug}/>
+                    Slug {" "}
+                  </MenubarItem>
+                  <MenubarItem>
+                    <Checkbox
+                    checked={showCategory}
+                    onCheckedChange={handleToggleCategory}
+                    /> Category{ " "}
+                  </MenubarItem>
+                  <Button
+                  variant="outline"
+                  className="w-full"
+                  onClick={handleResetColumns}
+                >
+                  Reset
+                </Button>
+                </div>
+              </MenubarContent>
+            </MenubarMenu>
+          </Menubar>
         </div>
-
         {hasSelectedRows && (
           <div className="border-t">
             <div className="flex justify-between items-center mx-3 py-1 my-3 space-x-2">
@@ -150,7 +206,10 @@
                 >
                   Select all
                 </button>
-                <button className="text-red-500 cursor-pointer" onClick={handleDeselectAll}>
+                <button
+                  className="text-red-500 cursor-pointer"
+                  onClick={handleDeselectAll}
+                >
                   Deselect all
                 </button>
               </div>
@@ -160,5 +219,4 @@
       </div>
     );
   };
-
-  export default React.memo(PostsTableHeader);
+  export default PostsTableHeader;
