@@ -107,7 +107,7 @@ A full-stack application for managing blog posts and categories.
             status ENUM('draft', 'published') DEFAULT 'draft',
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-            FOREIGN KEY (category_id) REFERENCES categories(id)
+            FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE SET NULL
         );
         ```
 
