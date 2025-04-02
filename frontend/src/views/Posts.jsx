@@ -5,7 +5,7 @@ import PostsTable from '../components/posts/PostsTable';
 
 const Posts = () => {
   return (
-    <div className="m-1 mx-40"> 
+    <div className="m-1 mx-40 bg-gray-100 h-full"> {/* Add h-full to fill parent height */}
       <PostHeader/>
       <PostsTable/>
     </div>

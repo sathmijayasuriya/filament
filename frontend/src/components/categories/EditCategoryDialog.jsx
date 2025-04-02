@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback,useMemo } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -19,12 +19,11 @@ export default function EditCategoryDialog({ open, onOpenChange, category, onCat
     }
   }, [category]);
 
-  const handleUpdate = async () => {
+  const handleUpdate = useCallback(async () => {
     if (!name) {
       toast.error("Please enter a category name.");
       return;
     }
-
     try {
       const response = await fetch(`http://localhost:5000/api/categories/${category.slug}`, {
         method: "PUT",
@@ -36,7 +35,6 @@ export default function EditCategoryDialog({ open, onOpenChange, category, onCat
           visibility: isVisible ? 1 : 0,
         }),
       });
-
       if (response.ok) {
         toast.success("Category updated successfully!");
         onOpenChange(false); // Close the dialog
@@ -50,11 +48,12 @@ export default function EditCategoryDialog({ open, onOpenChange, category, onCat
       console.error("Error updating category:", error);
       toast.error("An error occurred while updating the category.");
     }
-  };
+  }, [name, isVisible, category, onOpenChange, onCategoryUpdated, navigate]);
 
-  const handleCancel = () => {
+  const handleCancel = useCallback(() => {
     onOpenChange(false);
-  };
+  }, [onOpenChange]);
+
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

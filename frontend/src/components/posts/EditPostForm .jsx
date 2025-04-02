@@ -1,7 +1,6 @@
-import { useState, useEffect } from "react";
+import React,{ useState, useEffect,useMemo,useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -59,14 +58,28 @@ const EditPostForm = () => {
         setPublishedDate(
           data.published_at ? new Date(data.published_at) : null
         );
-        if (Array.isArray(data.tags) && data.tags.length > 0) { // Check if array is not empty
-            setTags(data.tags.join(", "));
-        } else if (typeof data.tags === "string" && data.tags.length > 0) {
-            setTags(data.tags);
+        if (typeof data.tags === "string" && data.tags.length > 0) {
+          try {
+            const tagsArray = JSON.parse(data.tags);
+  
+            if (Array.isArray(tagsArray)) {
+              const cleanedTags = tagsArray.map((tag) => {
+                if (typeof tag === "string") {
+                  return tag.replace(/^"|"$/g, "").replace(/\\"/g, '"');
+                }
+                return "";
+              }).filter(tag => tag); 
+              setTags(cleanedTags.join(", "));
+            } else {
+              setTags("");
+            }
+          } catch (error) {
+            console.error("Error parsing tags:", error);
+            setTags(""); 
+          }
         } else {
-            setTags(""); // Set to empty string if null, undefined, or empty
+          setTags(""); 
         }
-
         setImageUrl(data.image_path);
       })
       .catch((err) => {
@@ -84,7 +97,7 @@ const EditPostForm = () => {
   }, [slug]);
 
   const uploadImageToFirebase = async (file) => {
-    if (!file) return imageUrl; // If no new image, keep the existing URL
+    if (!file) return imageUrl; 
 
     try {
       const storage = getStorage(app);
@@ -96,7 +109,6 @@ const EditPostForm = () => {
         uploadTask.on(
           "state_changed",
           (snapshot) => {
-            // Optional: Add progress tracking here
             const progress =
               (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
             console.log("Upload is " + progress + "% done");
@@ -148,6 +160,7 @@ const EditPostForm = () => {
           .split(",")
           .map((tag) => tag.trim())
           .filter((tag) => tag),
+
         published_at: publishedDate
           ? format(publishedDate, "yyyy-MM-dd")
           : null,
@@ -294,7 +307,7 @@ const EditPostForm = () => {
         id="tags"
         value={tags}
         onChange={(e) => setTags(e.target.value)}
-        placeholder={tags.trim() ? "Comma-separated tags" : "No tags"} // Conditional placeholder
+        placeholder={tags.trim() ? "Comma-separated tags" : "No tags"} 
     />
 </div>
           </div>
@@ -312,10 +325,10 @@ const EditPostForm = () => {
               <img
                 src={imageUrl}
                 alt="Current Post Image"
-                className="max-w-xs max-h-40" // Adjust size as needed
+                className="max-w-xs max-h-40" 
                 onError={(e) => {
                   e.target.onerror = null; // Prevent infinite loop
-                  e.target.src = "placeholder-image.png"; // Replace with your placeholder
+                  e.target.src = "placeholder-image.png"; 
                 }}
               />
             </div>

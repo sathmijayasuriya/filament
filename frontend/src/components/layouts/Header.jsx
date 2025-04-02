@@ -9,15 +9,28 @@ import {
   Command,
   CommandInput,
 } from "@/components/ui/command"
+import { useNavigate } from "react-router-dom";
+import { Bars3Icon } from '@heroicons/react/24/solid';
 
 
-export default function Header() {
+export default function Header({toggleSidebar }) {
   // const [searchValue, setSearchValue] = useState("");
-
+    const navigate = useNavigate();
+    const handleNavigationImageClick = () => {
+      navigate("/posts"); 
+    };
+  
   return (
-    <header className="flex items-center justify-between py-1 border-b bg-white px-7">
+    <header className="bg-white border-b p-4 flex items-center justify-between">
       {/* Logo fliament */}
-      <img src={Logo} alt="Logo" className="h-13 cursor-pointer" />
+      
+      <div className="sm:hidden">
+        <button onClick={toggleSidebar}>
+          <Bars3Icon className="h-6 w-6" />
+        </button>
+      </div>
+
+      <img onClick={()=>handleNavigationImageClick()}  src={Logo} alt="Logo" className="h-13 cursor-pointer" />
       <div className="flex items-center w-2/3 justify-end gap-4">
         <div className="relative w-auto">
           <Command className="w-auto mr-5 px-1 py-0 border rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-300">

@@ -26,7 +26,7 @@
   --secondary-foreground: oklch(0.208 0.042 265.755);
   --muted: oklch(0.968 0.007 247.896);
   --muted-foreground: oklch(0.554 0.046 257.417);
-  --accent: oklch(0.968 0.007 247.896);
+  --accent: #eeeef0;
   --accent-foreground: oklch(0.208 0.042 265.755);
   --destructive: oklch(0.577 0.245 27.325);
   --destructive-foreground: oklch(0.577 0.245 27.325);
@@ -64,8 +64,8 @@ body {
   /* display: flex; */
   /* place-items: center; */
   /* min-width: 320px; */
-  /* min-height: 100vh; */
-}
+  min-height: 100vh;
+  background-color: #f3f4f6; }
 
 h1 {
   font-size: 3.2em;
@@ -80,7 +80,7 @@ button {
   /* border-radius: 8px;
   border: 1px solid transparent; */
   /* padding: 0.6em 1.2em; */
-  font-size: 1em;
+  /* font-size: 1em; */
   /* font-weight: 500; */
   font-family: inherit;
   /* background-color: #1a1a1a; */

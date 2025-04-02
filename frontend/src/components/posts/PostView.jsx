@@ -14,6 +14,7 @@ import { useParams } from 'react-router-dom'; // Assuming you're using React Rou
 import { getStorage, ref, getDownloadURL } from "firebase/storage";
 import { app } from '../../firebase';
 import MenuBarComponent from './PostViewMenu';
+
 export default function PostView() {
   const { slug } = useParams(); // Get the slug from the URL
   const [post, setPost] = useState(null);
@@ -57,6 +58,13 @@ export default function PostView() {
   if (error) return <div>Error: {error.message}</div>;
   if (!post) return <div>Post not found.</div>;
 
+  //remove tags in content
+  const stripHtmlTags = (html) => {
+    if (!html) return "";
+    const temp = document.createElement("div");
+    temp.innerHTML = html;
+    return temp.textContent || temp.innerText || "";
+  };
   return (
     <div className="mb-30">
       <div className="px-6 py-6 ">
@@ -186,7 +194,7 @@ export default function PostView() {
                 Content
               </AccordionTrigger>
               <AccordionContent className="p-4 bg-white border rounded-md">
-                {post.content}
+              {stripHtmlTags(post.content)}
               </AccordionContent>
             </AccordionItem>
           </Accordion>
