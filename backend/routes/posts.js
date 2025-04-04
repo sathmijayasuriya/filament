@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const postsController = require('../controllers/postController');
+const verifyToken = require('../middleware/authMiddleware');
 
 router.get('/posts', postsController.getAllPosts);
 router.get('/view/:slug', postsController.getPostBySlug);
