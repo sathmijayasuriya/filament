@@ -1,13 +1,14 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const pool = require('../db');
+const { db, users } = require('../db'); // Import Drizzle and users table
+const { eq } = require('drizzle-orm');
 
 exports.register = async (req, res) => {
   const { username, password } = req.body;
 
   try {
     const hashedPassword = await bcrypt.hash(password, 10);
-    await pool.query('INSERT INTO users (username, password) VALUES (?, ?)', [username, hashedPassword]);
+    await db.insert(users).values({ username, password: hashedPassword });
     res.status(201).json({ message: 'User registered' });
   } catch (err) {
     console.error(err);
@@ -15,12 +16,12 @@ exports.register = async (req, res) => {
   }
 };
 
-exports.login = async (req, res) => { 
+exports.login = async (req, res) => {
   const { username, password } = req.body;
 
   try {
-    const [users] = await pool.query('SELECT * FROM users WHERE username = ?', [username]);
-    const user = users[0];
+    const foundUsers = await db.select().from(users).where(eq(users.username, username));
+    const user = foundUsers[0];
 
     if (!user || !(await bcrypt.compare(password, user.password))) {
       return res.status(401).json({ error: 'Invalid credentials' });
