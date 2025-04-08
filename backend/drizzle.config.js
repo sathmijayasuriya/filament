@@ -1,10 +1,11 @@
-/** @type {import('drizzle-kit').Config} */
+require('dotenv/config'); 
 
 export default {
-  schema: './src/schema',
-  out: './drizzle',
-  driver: 'mysql2',
-  dbCredentials: {
+    schema: "./db/schema/schema.js",
+    out: "./db/migrations",
+    // driver: 'mysql',
+    dialect: 'mysql',
+    dbCredentials: {
     host: process.env.DB_HOST,
     port: Number(process.env.DB_PORT),
     user: process.env.DB_USER,
