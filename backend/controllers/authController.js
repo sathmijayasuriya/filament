@@ -22,7 +22,7 @@ exports.login = async (req, res) => {
   try {
     const foundUsers = await db.select().from(users).where(eq(users.username, username));
     const user = foundUsers[0];
-
+    console.log('User:', user); 
     if (!user || !(await bcrypt.compare(password, user.password))) {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
