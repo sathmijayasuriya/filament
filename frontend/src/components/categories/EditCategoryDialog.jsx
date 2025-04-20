@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { toast } from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-
+import { Configuration } from "../../../Configure";
 export default function EditCategoryDialog({ open, onOpenChange, category, onCategoryUpdated }) {
   const [isVisible, setIsVisible] = useState(true);
   const [name, setName] = useState("");
@@ -33,7 +33,7 @@ export default function EditCategoryDialog({ open, onOpenChange, category, onCat
       return;
     }
     try {
-      await axios.put(`http://localhost:5000/api/categories/${category.slug}`, 
+      await axios.put(`${Configuration.BASE_URL}/categories/${category.slug}`, 
         {
           name,
           visibility: isVisible ? 1 : 0,

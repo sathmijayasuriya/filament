@@ -1,4 +1,4 @@
-import React,{ useState, useEffect,useMemo,useCallback } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -43,75 +43,54 @@ const EditPostForm = () => {
   const [publishedDate, setPublishedDate] = useState(null);
   const [tags, setTags] = useState("");
   const [image, setImage] = useState(null);
-  const [imageUrl, setImageUrl] = useState(""); // For existing image URL
+  const [imageUrl, setImageUrl] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState(null);
-  const [status, setStatus] = useState("draft"); 
+  const [status, setStatus] = useState("draft");
 
+  // Function to generate a slug from the title
+  const generateSlug = (title) => {
+    return title
+      .toLowerCase()
+      .replace(/ /g, "-")
+      .replace(/[^\w-]+/g, "");
+  };
 
   useEffect(() => {
-      const token = localStorage.getItem("token");
-      const fetchData = async () =>{
-        try{
-          console.log("fetaching post with slug",slug);
-          const postResponse = await axios.get(`${Configuration.BASE_URL}/posts/view/${slug}`,{
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-      
-          });
-          const data = postResponse.data;
-          setTitle(data.title);
-          setContent(data.content);
-          setCategory({ id: String(data.category_id), name: data.category_name });
-          setPublishedDate(data.published_at ? new Date(data.published_at) : null);
-          setStatus(data.status || "draft"); 
-          // fetch tags
-          if (typeof data.tags === "string" && data.tags.length > 0) {
-            try {
-              const tagsArray = JSON.parse(data.tags);
-              if (Array.isArray(tagsArray)) {
-                const cleanedTags = tagsArray
-                  .map((tag) => {
-                    if (typeof tag === "string") {
-                      return tag.replace(/^"|"$/g, "").replace(/\\"/g, '"');
-                    }
-                    return "";
-                  })
-                  .filter((tag) => tag);
-                setTags(cleanedTags.join(", "));
-              } else {
-                setTags("");
-              }
-            } catch (error) {
-              console.error("Error parsing tags:", error);
-              setTags("");
-            }
-          } else {
-            setTags("");
-          }
-          // Set existing image URL
-          setImageUrl(data.image_path);
+    const token = localStorage.getItem("token");
+    const fetchData = async () => {
+      try {
+        console.log("fetching post with slug", slug);
+        const postResponse = await axios.get(`${Configuration.BASE_URL}/posts/view/${slug}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        const data = postResponse.data;
+        setTitle(data.title);
+        setContent(data.content);
+        setCategory({ id: String(data.category_id), name: data.category_name });
+        setPublishedDate(data.published_at ? new Date(data.published_at) : null);
+        setStatus(data.status || "draft");
+        setTags(data.tags || "");
+        setImageUrl(data.image_path);
 
-          // Fetch categories
         const categoryRes = await axios.get(`${Configuration.BASE_URL}/categories/names`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
         });
         setCategories(categoryRes.data);
-
-        }catch(error){
-          console.error("Error fetching categories:", error);
-          setError("Failed to fetch categories");
-        }
+      } catch (error) {
+        console.error("Error fetching categories:", error);
+        setError("Failed to fetch post data");
       }
-      fetchData();
-  },[slug]);
+    };
+    fetchData();
+  }, [slug]);
 
   const uploadImageToFirebase = async (file) => {
-    if (!file) return imageUrl; 
-
+    if (!file) return imageUrl;
     try {
       const storage = getStorage(app);
       const fileName = new Date().getTime() + file.name;
@@ -158,6 +137,7 @@ const EditPostForm = () => {
 
     setIsSubmitting(true);
     let newImageUrl = imageUrl;
+    const newSlug = generateSlug(title); // Generate a new slug
 
     try {
       if (image) {
@@ -173,14 +153,12 @@ const EditPostForm = () => {
           .split(",")
           .map((tag) => tag.trim())
           .filter((tag) => tag),
-
-        published_at: publishedDate
-          ? format(publishedDate, "yyyy-MM-dd")
-          : null,
+        published_at: publishedDate ? format(publishedDate, "yyyy-MM-dd") : null,
+        slug: newSlug, // Include the new slug in the update
       };
 
       await axios.put(
-        `${Configuration.BASE_URL}/posts/edit/${slug}`,
+        `${Configuration.BASE_URL}/posts/edit/${slug}`, // Use the old slug for the update
         postData,
         {
           headers: {
@@ -190,10 +168,9 @@ const EditPostForm = () => {
           },
         }
       );
-        toast.success("Post updated successfully!");
-        navigate(`/posts/${slug}`);
-    } 
-    catch (err) {
+      toast.success("Post updated successfully!");
+      navigate(`/posts/${newSlug}`); // Navigate to the new slug
+    } catch (err) {
       console.error("Error updating post:", err);
       setError("An error occurred while updating the post");
       toast.error("An error occurred while updating the post");
@@ -250,28 +227,28 @@ const EditPostForm = () => {
                 Category
               </Label>
               <Select
-    value={category.id}
-    onValueChange={(id) => {
-        const selectedCategory = categories.find((cat) => cat.id === id);
-        if (selectedCategory) {
-            setCategory({ id: selectedCategory.id, name: selectedCategory.name });
-        }
-    }}
-    required
->
-    <SelectTrigger className="w-full">
-        <SelectValue placeholder="Select a category">
-        {category.name}
-        </SelectValue>
-    </SelectTrigger>
-    <SelectContent>
-        {categories.map((cat) => (
-            <SelectItem key={cat.id} value={cat.id}>
-                {cat.name}
-            </SelectItem>
-        ))}
-    </SelectContent>
-</Select>
+                value={category.id}
+                onValueChange={(id) => {
+                  const selectedCategory = categories.find((cat) => cat.id === id);
+                  if (selectedCategory) {
+                    setCategory({ id: selectedCategory.id, name: selectedCategory.name });
+                  }
+                }}
+                required
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select a category">
+                    {category.name}
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  {categories.map((cat) => (
+                    <SelectItem key={cat.id} value={cat.id}>
+                      {cat.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="mt-4">
@@ -283,9 +260,7 @@ const EditPostForm = () => {
                   <div className="relative">
                     <Input
                       type="text"
-                      value={
-                        publishedDate ? format(publishedDate, "yyyy-MM-dd") : ""
-                      }
+                      value={publishedDate ? format(publishedDate, "yyyy-MM-dd") : ""}
                       readOnly
                       className="w-full pr-10"
                     />
@@ -304,44 +279,41 @@ const EditPostForm = () => {
             </div>
           </div>
           <div className="grid grid-cols-2 gap-4 mt-4">
-          <div className="mt-4">
-    <Label className="mb-4" htmlFor="tags">
-        Tags
-    </Label>
-    <Input
-        type="text"
-        id="tags"
-        value={tags}
-        onChange={(e) => setTags(e.target.value)}
-        placeholder={tags.trim() ? "Comma-separated tags" : "No tags"} 
-    />
-</div>
+            <div className="mt-4">
+              <Label className="mb-4" htmlFor="tags">
+                Tags
+              </Label>
+              <Input
+                type="text"
+                id="tags"
+                value={tags}
+                onChange={(e) => setTags(e.target.value)}
+                placeholder={tags.trim() ? "Comma-separated tags" : "No tags"}
+              />
+            </div>
           </div>
         </div>
-        {/* Image Upload Section */}
         <div className="bg-white w-full p-5 mt-7 rounded-lg border">
           <Label className="mb-3" htmlFor="image">
             Image
           </Label>
           <ImageUpload onImageChange={setImage} />
-          {/* {image && <p className="mt-2">Selected file: {image.name}</p>} */}
           {imageUrl && !image && (
             <div className="mt-2">
               <p>Current Image:</p>
               <img
                 src={imageUrl}
                 alt="Current Post Image"
-                className="max-w-xs max-h-40" 
+                className="max-w-xs max-h-40"
                 onError={(e) => {
-                  e.target.onerror = null; // Prevent infinite loop
-                  e.target.src = "placeholder-image.png"; 
+                  e.target.onerror = null;
+                  e.target.src = "placeholder-image.png";
                 }}
               />
             </div>
           )}
         </div>
 
-        {/* Submit Buttons */}
         <div className="mt-6 flex justify-start gap-4">
           <Button
             className="bg-orange-400 hover:bg-orange-500 text-white"

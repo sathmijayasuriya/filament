@@ -18,7 +18,8 @@ import { Button } from "@/components/ui/button";
   import { toast } from "react-hot-toast";
   import PostsTableHeader from "./PostsTableHeader";
   import PostsTablePagination from "./PostsTablePagination ";
-import axios from "axios";
+  import axios from "axios";
+  import { Configuration } from "../../../Configure";
 
   const PostsTable = () => {
 
@@ -47,7 +48,7 @@ import axios from "axios";
     };
     const fetchData = async () => {
       try {
-        const url = new URL("http://localhost:5000/api/posts/posts");
+        const url = new URL(`${Configuration.BASE_URL}/posts/posts`);
         if (startDate) {
           const formattedStartDate = formatLocalDate(startDate);
           console.log("Formatted Start Date:", formattedStartDate);
@@ -58,7 +59,7 @@ import axios from "axios";
           console.log("Formatted End Date:", formattedEndDate);
           url.searchParams.append('to', formattedEndDate);
         }
-        const response = await axios.get(url,{
+        const response = await axios.get(url.toString(), {
           headers: {
             Authorization: `Bearer ${token}`,
           }
@@ -91,7 +92,7 @@ import axios from "axios";
     const handlePostDeleted = useCallback(async () => {
       try {
         const token = localStorage.getItem("token");
-        const response = await axios.get("http://localhost:5000/api/posts/posts", {
+        const response = await axios.get(`${Configuration.BASE_URL}/posts/posts`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -106,7 +107,7 @@ import axios from "axios";
     const handleConfirmDelete = useCallback(async () => {
       try {
         const token = localStorage.getItem("token");
-        const response = await axios.delete(`http://localhost:5000/api/posts/delete/${selectedPostSlug}`, {
+        const response = await axios.delete(`${Configuration.BASE_URL}/posts/delete/${selectedPostSlug}`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },

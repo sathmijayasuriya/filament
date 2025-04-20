@@ -20,7 +20,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "react-hot-toast"; 
 import { useNavigate } from "react-router-dom"; 
 import { useCallback } from "react";
-
+import { Configuration } from "../../../Configure";
 export default function CreateCategoryDialog({ open, onOpenChange, onConfirm, onCancel,onCategoryCreated  }) {
   const [isVisible, setIsVisible] = useState(true);
   const [description, setDescription] = useState("");
@@ -41,7 +41,7 @@ export default function CreateCategoryDialog({ open, onOpenChange, onConfirm, on
   
       try {
         const token = localStorage.getItem("token");
-        const response = await fetch("http://localhost:5000/api/categories/create", {
+        const response = await fetch(`${Configuration.BASE_URL}/categories/create`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",

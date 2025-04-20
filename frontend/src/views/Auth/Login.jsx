@@ -10,7 +10,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import Logo from "../../assets/logo.png";
 import axios from "axios";
-
+import { Configuration } from "../../../Configure";
 export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
@@ -53,7 +53,7 @@ export default function Login() {
     }
     console.log(payload)
     try{
-      const res = await axios.post("http://localhost:5000/api/auth/login",payload);
+      const res = await axios.post(`${Configuration.BASE_URL}/auth/login`,payload);
       login(res.data.token); // token
       console.log(res.data.token)
       navigate("/dashboard"); 

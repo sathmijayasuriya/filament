@@ -22,7 +22,7 @@ import ImageUpload from "./ImageUpload ";
 import { useNavigate } from 'react-router-dom'; // Import useNavigate
 import TagInput from "./TagInput";
 import axios from "axios";
-
+import { Configuration } from "../../../Configure";
 const PostForm = () => {
   const [title, setTitle] = useState("");
   const [slug, setSlug] = useState("");
@@ -52,7 +52,7 @@ const PostForm = () => {
     const fetchData = async () => {
       try{
         const token = localStorage.getItem("token");
-        const response = await axios.get("http://localhost:5000/api/categories/names", {
+        const response = await axios.get(`${Configuration.BASE_URL}/categories/names`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -150,12 +150,12 @@ const PostForm = () => {
         content,
         category_id: parseInt(category.id),
         image_path: imageUrl,
-        tags: tags,
+        tags: JSON.stringify(tags), 
         published_at: publishedDate ? format(publishedDate, "yyyy-MM-dd") : null,
       };
       console.log("Sending post data:", postData);
       const token = localStorage.getItem("token");
-      const response = await axios.post("http://localhost:5000/api/posts/create", 
+      const response = await axios.post(`${Configuration.BASE_URL}/posts/create`, 
         postData, {
         headers: { 
           "Content-Type": "application/json",
@@ -170,7 +170,7 @@ const PostForm = () => {
         setContent("");
         setCategory({ id: "", name: "" });
         setPublishedDate(null);
-        setTags("");
+        setTags([]);
         setImage(null);
         navigate('/posts'); 
       
