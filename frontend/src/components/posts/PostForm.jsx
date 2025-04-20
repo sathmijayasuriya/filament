@@ -21,6 +21,7 @@ import { app } from "../../firebase";
 import ImageUpload from "./ImageUpload ";
 import { useNavigate } from 'react-router-dom'; // Import useNavigate
 import TagInput from "./TagInput";
+import axios from "axios";
 
 const PostForm = () => {
   const [title, setTitle] = useState("");
@@ -29,7 +30,7 @@ const PostForm = () => {
   const [category, setCategory] = useState({ id: "", name: "" });
   const [categories, setCategories] = useState([]);
   const [publishedDate, setPublishedDate] = useState(null);
-  const [tags, setTags] = useState("");
+  const [tags, setTags] = useState([]);
   const [image, setImage] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState(null);
@@ -37,15 +38,33 @@ const PostForm = () => {
   const navigate = useNavigate();
 
   // Fetch categories from backend
+  // useEffect(() => {
+  //   fetch("http://localhost:5000/api/categories/names")
+  //     .then((res) => res.json())
+  //     .then((data) => setCategories(data))
+  //     .catch((error) => {
+  //       console.error("Error fetching categories:", error);
+  //       setError("Failed to fetch categories");
+  //     });
+  // }, []);
+
   useEffect(() => {
-    fetch("http://localhost:5000/api/categories/names")
-      .then((res) => res.json())
-      .then((data) => setCategories(data))
-      .catch((error) => {
+    const fetchData = async () => {
+      try{
+        const token = localStorage.getItem("token");
+        const response = await axios.get("http://localhost:5000/api/categories/names", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        setCategories(response.data);
+      }catch (error) {
         console.error("Error fetching categories:", error);
         setError("Failed to fetch categories");
-      });
-  }, []);
+      }
+    }
+    fetchData();
+  }, [setCategories]);
 
   // Auto-generate slug from title
   useEffect(() => {
@@ -119,12 +138,12 @@ const PostForm = () => {
     let imageUrl = "";
     
     try {
+
       if (image) {
         console.log("Starting image upload...");
         imageUrl = await uploadImageToFirebase(image);
         console.log("Image uploaded successfully:", imageUrl);
       }
-//data
       const postData = {
         title,
         slug,
@@ -134,24 +153,17 @@ const PostForm = () => {
         tags: tags,
         published_at: publishedDate ? format(publishedDate, "yyyy-MM-dd") : null,
       };
-
       console.log("Sending post data:", postData);
-
-      const response = await fetch("http://localhost:5000/api/posts/create", {
-        method: "POST",
+      const token = localStorage.getItem("token");
+      const response = await axios.post("http://localhost:5000/api/posts/create", 
+        postData, {
         headers: { 
           "Content-Type": "application/json",
-          "Accept": "application/json"
+          "Accept": "application/json",
+          "Authorization": `Bearer ${token}`,
         },
-        body: JSON.stringify(postData),
       });
-      
-      console.log("Response status:", response.status);
-      
-      const responseData = await response.json();
-      console.log("Response data:", responseData);
-
-      if (response.ok) {
+        console.log("Response status:", response.headers.Authorization);
         toast.success("Post created successfully!");
         setTitle("");
         setSlug("");
@@ -161,10 +173,7 @@ const PostForm = () => {
         setTags("");
         setImage(null);
         navigate('/posts'); 
-      } else {
-        setError(responseData.error || "Failed to create post");
-        toast.error(responseData.error || "Failed to create post");
-      }
+      
     } catch (error) {
       console.error("Error submitting post:", error);
       setError("An error occurred while creating the post");

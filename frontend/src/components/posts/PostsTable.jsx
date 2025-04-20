@@ -18,6 +18,7 @@ import { Button } from "@/components/ui/button";
   import { toast } from "react-hot-toast";
   import PostsTableHeader from "./PostsTableHeader";
   import PostsTablePagination from "./PostsTablePagination ";
+import axios from "axios";
 
   const PostsTable = () => {
 
@@ -37,41 +38,41 @@ import { Button } from "@/components/ui/button";
       category_name: false,
       post_slug: false,
     });  
+    const token = localStorage.getItem("token");
     const formatLocalDate = (date) => {
       const year = date.getFullYear();
       const month = String(date.getMonth() + 1).padStart(2, '0');
       const day = String(date.getDate()).padStart(2, '0');
       return `${year}-${month}-${day}`;
     };
-        
+    const fetchData = async () => {
+      try {
+        const url = new URL("http://localhost:5000/api/posts/posts");
+        if (startDate) {
+          const formattedStartDate = formatLocalDate(startDate);
+          console.log("Formatted Start Date:", formattedStartDate);
+          url.searchParams.append('from', formattedStartDate);
+        }
+        if (endDate) {
+          const formattedEndDate = formatLocalDate(endDate);
+          console.log("Formatted End Date:", formattedEndDate);
+          url.searchParams.append('to', formattedEndDate);
+        }
+        const response = await axios.get(url,{
+          headers: {
+            Authorization: `Bearer ${token}`,
+          }
+        });
+        setData(response.data);
+      } catch (err) {
+        setError(err);
+      } finally {
+        setLoading(false);
+      }
+    };    
     useEffect(() => {
       // setCurrentPage(1); // Reset to the first page
       // setLoading(true);
-      const fetchData = async () => {
-        try {
-          const url = new URL("http://localhost:5000/api/posts/posts");
-          if (startDate) {
-            const formattedStartDate = formatLocalDate(startDate);
-            console.log("Formatted Start Date:", formattedStartDate);
-            url.searchParams.append('from', formattedStartDate);
-          }
-          if (endDate) {
-            const formattedEndDate = formatLocalDate(endDate);
-            console.log("Formatted End Date:", formattedEndDate);
-            url.searchParams.append('to', formattedEndDate);
-          }
-          const response = await fetch(url);
-          if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-          }
-          const result = await response.json();
-          setData(result);
-        } catch (err) {
-          setError(err);
-        } finally {
-          setLoading(false);
-        }
-      };
       fetchData();
       console.log("Start Date:", startDate);
       console.log("End Date:", endDate);    
@@ -87,34 +88,45 @@ import { Button } from "@/components/ui/button";
       setDeleteDialogOpen(true);
     }, []);
 
-    const handlePostDeleted = useCallback(() => {
-      fetch("http://localhost:5000/api/posts/posts")
-        .then((response) => response.json())
-        .then((result) => setData(result));
-        
+    const handlePostDeleted = useCallback(async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const response = await axios.get("http://localhost:5000/api/posts/posts", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        setData(response.data);
+      } catch (error) {
+        console.error("Error fetching posts:", error);
+      }
     }, []);
-    
+        
     
     const handleConfirmDelete = useCallback(async () => {
       try {
-        const response = await fetch(`http://localhost:5000/api/posts/delete/${selectedPostSlug}`, {
-          method: "DELETE",
+        const token = localStorage.getItem("token");
+        const response = await axios.delete(`http://localhost:5000/api/posts/delete/${selectedPostSlug}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         });
-        if (response.ok) {
-          setData((prevData) => prevData.filter((post) => post.slug !== selectedPostSlug));
-          navigate("/posts");
+        if (response.status==200) {
+          // setData((prevData) => prevData.filter((post) => post.slug !== selectedPostSlug));
           toast.success("Post deleted successfully!");
-        } else {
-          const errorData = await response.json();
-          toast.error(errorData.error || "Failed to delete post.");
+          await fetchData(); // refresh posts 
+            } else {
+          toast.error("Failed to delete post.");
         }
         setDeleteDialogOpen(false);
         setSelectedPostSlug(null);
       } catch (error) {
         console.error("Error deleting post:", error);
-        toast.error("An error occurred while deleting the post.");
-      }
-    }, [navigate, selectedPostSlug]);
+        toast.error(
+          error.response?.data?.error || "An error occurred while deleting the post."
+        );
+          }
+    }, [selectedPostSlug, fetchData]);
 
 
     const columns = useMemo( ()=> [
@@ -284,7 +296,7 @@ import { Button } from "@/components/ui/button";
             </div>
             <div className="flex items-center space-x-[-10px]">
               <TrashIcon className="text-red-500 h-4 w-4" />
-              <Button className="text-red-500" variant="link" size="sm" onClick={() => handleDeleteClick(row.original.slug)}>Delete</Button>
+              <Button className="text-red-500" variant="link" size="sm" onClick={() => handleDeleteClick(row.original.post_slug)}>Delete</Button>
               </div>
           </div>
         ),

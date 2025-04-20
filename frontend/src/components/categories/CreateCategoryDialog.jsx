@@ -40,10 +40,13 @@ export default function CreateCategoryDialog({ open, onOpenChange, onConfirm, on
       }
   
       try {
+        const token = localStorage.getItem("token");
         const response = await fetch("http://localhost:5000/api/categories/create", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+
           },
           body: JSON.stringify({
             name,

@@ -27,23 +27,22 @@ const CategoryTable = ({categoryCreated }) => {
   const [searchTerm, setSearchTerm] = useState(''); 
   const navigate = useNavigate();
 
+  const token = localStorage.getItem("token");
+  const fetchData = async () => {
+    try {
+      const response = await axios.get("http://localhost:5000/api/categories", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      setData(response.data);
+    } catch (error) {
+      console.error("Error fetching categories:", error);
+    }
+  };
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await fetch("http://localhost:5000/api/categories");
-        if (response.ok) {
-          const result = await response.json();
-          setData(result);
-        } else {
-          console.error("Failed to fetch categories");
-        }
-      } catch (error) {
-        console.error("Error fetching categories:", error);
-      }
-    };
-
     fetchData();
-  }, [categoryCreated]);
+  }, [categoryCreated, token]);
 
    // Filter based on the search term
    const filteredData = useMemo(() => {
@@ -96,25 +95,26 @@ const CategoryTable = ({categoryCreated }) => {
   const handleConfirmDelete = useCallback(async () => {
     try {
       await axios.delete(
-        `http://localhost:5000/api/categories/delete/${selectedCategorySlug}`
+        `http://localhost:5000/api/categories/delete/${selectedCategorySlug}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
       );
-      const response = await fetch("http://localhost:5000/api/categories");
-      if (response.ok) {
-        const result = await response.json();
-        setData(result);
-        navigate("/categories");
-      } else {
-        const errorData = await response.json();
-        console.error(
-          errorData.error || "Failed to refresh categories after deletion"
-        );
-      }
+      const response = await axios.get("http://localhost:5000/api/categories",{
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      setData(response.data);
+      navigate("/categories");
       setDeleteDialogOpen(false);
       setSelectedCategorySlug(null);
     } catch (error) {
       console.error("Error deleting category:", error);
     }
-  }, [selectedCategorySlug, navigate]);
+  }, [selectedCategorySlug, navigate,token]);
 
 const handleCancelDelete = () => {
     setDeleteDialogOpen(false);
@@ -127,14 +127,18 @@ const handleCancelDelete = () => {
   const handleViewClick = useCallback(async (slug) => {
     try {
       const response = await axios.get(
-        `http://localhost:5000/api/categories/${slug}`
+        `http://localhost:5000/api/categories/${slug}`,{
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
       );
       setSelectedCategory(response.data);
       setViewDialogOpen(true);
     } catch (error) {
       console.error("Error fetching category details:", error);
     }
-  }, []);
+  }, [token]);
 
   const handleCloseView = useCallback(() => {
     setViewDialogOpen(false);
@@ -144,6 +148,8 @@ const handleCancelDelete = () => {
 //edit
 const [editDialogOpen, setEditDialogOpen] = useState(false);
 const [selectedCategoryToEdit, setSelectedCategoryToEdit] = useState(null);
+
+
 
 
   return (
@@ -222,12 +228,7 @@ const [selectedCategoryToEdit, setSelectedCategoryToEdit] = useState(null);
           open={editDialogOpen}
           onOpenChange={setEditDialogOpen}
           category={selectedCategoryToEdit}
-          onCategoryUpdated={() => {
-            // Refresh your category data here
-            fetch("http://localhost:5000/api/categories")
-              .then((response) => response.json())
-              .then((result) => setData(result));
-          }}
+          onCategoryUpdated={fetchData} // Refresh category list after editing
         />
       </div>
     </div>

@@ -29,7 +29,8 @@ import {
 import { app } from "../../firebase";
 import ImageUpload from "./ImageUpload ";
 import MenuBarComponent from './PostViewMenu';
-
+import axios from "axios";
+import { Configuration } from "../../../Configure";
 
 const EditPostForm = () => {
   const { slug } = useParams();
@@ -45,56 +46,68 @@ const EditPostForm = () => {
   const [imageUrl, setImageUrl] = useState(""); // For existing image URL
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState(null);
+  const [status, setStatus] = useState("draft"); 
+
 
   useEffect(() => {
-      console.log("Fetching post with slug:", slug);
-
-    fetch(`http://localhost:5000/api/posts/view/${slug}`)
-      .then((res) => res.json())
-      .then((data) => {
-        setTitle(data.title);
-        setContent(data.content);
-        setCategory({ id: String(data.category_id), name: data.category_name });
-        setPublishedDate(
-          data.published_at ? new Date(data.published_at) : null
-        );
-        if (typeof data.tags === "string" && data.tags.length > 0) {
-          try {
-            const tagsArray = JSON.parse(data.tags);
-  
-            if (Array.isArray(tagsArray)) {
-              const cleanedTags = tagsArray.map((tag) => {
-                if (typeof tag === "string") {
-                  return tag.replace(/^"|"$/g, "").replace(/\\"/g, '"');
-                }
-                return "";
-              }).filter(tag => tag); 
-              setTags(cleanedTags.join(", "));
-            } else {
+      const token = localStorage.getItem("token");
+      const fetchData = async () =>{
+        try{
+          console.log("fetaching post with slug",slug);
+          const postResponse = await axios.get(`${Configuration.BASE_URL}/posts/view/${slug}`,{
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+      
+          });
+          const data = postResponse.data;
+          setTitle(data.title);
+          setContent(data.content);
+          setCategory({ id: String(data.category_id), name: data.category_name });
+          setPublishedDate(data.published_at ? new Date(data.published_at) : null);
+          setStatus(data.status || "draft"); 
+          // fetch tags
+          if (typeof data.tags === "string" && data.tags.length > 0) {
+            try {
+              const tagsArray = JSON.parse(data.tags);
+              if (Array.isArray(tagsArray)) {
+                const cleanedTags = tagsArray
+                  .map((tag) => {
+                    if (typeof tag === "string") {
+                      return tag.replace(/^"|"$/g, "").replace(/\\"/g, '"');
+                    }
+                    return "";
+                  })
+                  .filter((tag) => tag);
+                setTags(cleanedTags.join(", "));
+              } else {
+                setTags("");
+              }
+            } catch (error) {
+              console.error("Error parsing tags:", error);
               setTags("");
             }
-          } catch (error) {
-            console.error("Error parsing tags:", error);
-            setTags(""); 
+          } else {
+            setTags("");
           }
-        } else {
-          setTags(""); 
-        }
-        setImageUrl(data.image_path);
-      })
-      .catch((err) => {
-        console.error("Error fetching post:", err);
-        setError("Failed to fetch post");
-      });
+          // Set existing image URL
+          setImageUrl(data.image_path);
 
-    fetch("http://localhost:5000/api/categories/names")
-      .then((res) => res.json())
-      .then((data) => setCategories(data))
-      .catch((err) => {
-        console.error("Error fetching categories:", err);
-        setError("Failed to fetch categories");
-      });
-  }, [slug]);
+          // Fetch categories
+        const categoryRes = await axios.get(`${Configuration.BASE_URL}/categories/names`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        setCategories(categoryRes.data);
+
+        }catch(error){
+          console.error("Error fetching categories:", error);
+          setError("Failed to fetch categories");
+        }
+      }
+      fetchData();
+  },[slug]);
 
   const uploadImageToFirebase = async (file) => {
     if (!file) return imageUrl; 
@@ -150,7 +163,7 @@ const EditPostForm = () => {
       if (image) {
         newImageUrl = await uploadImageToFirebase(image);
       }
-
+      const token = localStorage.getItem("token");
       const postData = {
         title,
         content,
@@ -166,28 +179,21 @@ const EditPostForm = () => {
           : null,
       };
 
-      const response = await fetch(
-        `http://localhost:5000/api/posts/edit/${slug}`,
+      await axios.put(
+        `${Configuration.BASE_URL}/posts/edit/${slug}`,
+        postData,
         {
-          method: "PUT",
           headers: {
             "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
             Accept: "application/json",
           },
-          body: JSON.stringify(postData),
         }
       );
-
-      const responseData = await response.json();
-
-      if (response.ok) {
         toast.success("Post updated successfully!");
         navigate(`/posts/${slug}`);
-      } else {
-        setError(responseData.error || "Failed to update post");
-        toast.error(responseData.error || "Failed to update post");
-      }
-    } catch (err) {
+    } 
+    catch (err) {
       console.error("Error updating post:", err);
       setError("An error occurred while updating the post");
       toast.error("An error occurred while updating the post");

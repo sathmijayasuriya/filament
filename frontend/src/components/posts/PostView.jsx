@@ -1,19 +1,25 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   Breadcrumb,
   BreadcrumbItem,
   BreadcrumbLink,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
-import PostViewMenu from './PostViewMenu';
+import PostViewMenu from "./PostViewMenu";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableRow, TableCell } from "@/components/ui/table";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
-import { useParams } from 'react-router-dom'; // Assuming you're using React Router
+import { useParams } from "react-router-dom"; // Assuming you're using React Router
 import { getStorage, ref, getDownloadURL } from "firebase/storage";
-import { app } from '../../firebase';
-import MenuBarComponent from './PostViewMenu';
+import { app } from "../../firebase";
+import MenuBarComponent from "./PostViewMenu";
+import axios from "axios";
 
 export default function PostView() {
   const { slug } = useParams(); // Get the slug from the URL
@@ -27,23 +33,28 @@ export default function PostView() {
       setLoading(true);
       setError(null);
       try {
-        const response = await fetch(`http://localhost:5000/api/posts/view/${slug}`);
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const data = await response.json();
-        setPost(data);
-        if (data.image_path) {
+        const token = localStorage.getItem("token");
+        const response = await axios.get(
+          `http://localhost:5000/api/posts/view/${slug}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        setPost(response.data);
+        if (response.data.image_path) {
           const storage = getStorage(app);
-          const imageRef = ref(storage, data.image_path);
+          const imageRef = ref(storage, response.data.image_path);
 
-          getDownloadURL(imageRef).then((url) => {
-            setImageUrl(url);
-          }).catch((error) => {
-            console.error("Error getting download URL:", error);
-          });
+          getDownloadURL(imageRef)
+            .then((url) => {
+              setImageUrl(url);
+            })
+            .catch((error) => {
+              console.error("Error getting download URL:", error);
+            });
         }
-
       } catch (err) {
         setError(err);
       } finally {
@@ -127,7 +138,11 @@ export default function PostView() {
                                 variant="secondary"
                                 className="bg-green-100 text-green-600 text-xs"
                               >
-                                {post.published_at ? new Date(post.published_at).toLocaleDateString() : 'Not published'}
+                                {post.published_at
+                                  ? new Date(
+                                      post.published_at
+                                    ).toLocaleDateString()
+                                  : "draft"}
                               </Badge>
                             </TableCell>
                           </TableRow>
@@ -144,7 +159,7 @@ export default function PostView() {
                           </TableRow>
                           <TableRow noBorder={true}>
                             <TableCell className="text-sm py-1">
-                              {post.author || 'Unknown'}
+                              {post.author || "Unknown"}
                             </TableCell>
                           </TableRow>
                           <TableRow noBorder={true}>
@@ -154,7 +169,7 @@ export default function PostView() {
                           </TableRow>
                           <TableRow noBorder={true}>
                             <TableCell className="text-sm py-1">
-                              {post.category_name  || 'Uncategorized'}
+                              {post.category_name || "Uncategorized"}
                             </TableCell>
                           </TableRow>
                           <TableRow noBorder={true}>
@@ -164,7 +179,9 @@ export default function PostView() {
                           </TableRow>
                           <TableRow noBorder={true}>
                             <TableCell className="text-sm py-1">
-                              {post.tags ? JSON.parse(post.tags).join(', ') : '-'}
+                              {post.tags
+                                ? JSON.parse(post.tags).join(", ")
+                                : "-"}
                             </TableCell>
                           </TableRow>
                         </TableBody>
@@ -194,7 +211,7 @@ export default function PostView() {
                 Content
               </AccordionTrigger>
               <AccordionContent className="p-4 bg-white border rounded-md">
-              {stripHtmlTags(post.content)}
+                {stripHtmlTags(post.content)}
               </AccordionContent>
             </AccordionItem>
           </Accordion>
