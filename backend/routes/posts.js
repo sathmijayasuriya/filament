@@ -1,12 +1,14 @@
 const express = require('express');
 const router = express.Router();
-const postsController = require('../controllers/postController');
+const postsController = require('../controllers/PostController');
 const verifyToken = require('../middleware/authMiddleware');
 
-router.get('/posts', verifyToken,postsController.getAllPosts);
-router.get('/view/:slug',verifyToken, postsController.getPostBySlug);
-router.post('/create',verifyToken, postsController.createPost);
-router.put('/edit/:slug',verifyToken, postsController.updatePost);
-router.delete('/delete/:slug',verifyToken, postsController.deletePost);
+
+router.use(verifyToken);
+router.get('/posts',postsController.getAllPosts);
+router.get('/view/:slug', postsController.getPostBySlug);
+router.post('/create', postsController.createPost);
+router.put('/edit/:slug', postsController.updatePost);
+router.delete('/delete/:slug', postsController.deletePost);
 
 module.exports = router;
