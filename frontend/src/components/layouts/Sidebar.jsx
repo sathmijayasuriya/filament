@@ -26,8 +26,8 @@ import {
 } from "@/components/ui/collapsible";
 
 const Sidebar = () => {
-  const [shopOpen, setShopOpen] = useState(false);
-  const [blogOpen, setBlogOpen] = useState(false);
+  const [shopOpen, setShopOpen] = useState(true);
+  const [blogOpen, setBlogOpen] = useState(true);
 
   return (
     <div className="h-screen w-80 bg-gray-100 p-4 mt-6  flex flex-col">

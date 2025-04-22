@@ -1,4 +1,4 @@
-import React, { useState, useEffect,useCallback,useMemo } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   Table,
@@ -11,82 +11,90 @@ import {
 import { Input } from "@/components/ui/input";
 import DeleteMessageDialog from "../posts/DeleteMessageDialog";
 import ViewCategoryDialog from "./ViewCategoryDialog";
-import { format } from 'date-fns'; 
-import axios from 'axios'; 
-import { useNavigate } from 'react-router-dom';
+import { format } from "date-fns";
+import axios from "axios";
+import { useNavigate } from "react-router-dom";
 import EditCategoryDialog from "./EditCategoryDialog";
 import CategoryTableBody from "./CategoryTableBody";
 import CategoryTableFooter from "./CategoryTableFooter";
+import { Configuration } from "../../../Configure";
 
-const CategoryTable = ({categoryCreated }) => {
+const CategoryTable = ({ categoryCreated }) => {
   const [data, setData] = useState([]);
   const [page, setPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(5);
   const [selectedRows, setSelectedRows] = useState([]);
   const [selectAll, setSelectAll] = useState(false);
-  const [searchTerm, setSearchTerm] = useState(''); 
+  const [searchTerm, setSearchTerm] = useState("");
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await fetch("http://localhost:5000/api/categories");
-        if (response.ok) {
-          const result = await response.json();
-          setData(result);
-        } else {
-          console.error("Failed to fetch categories");
-        }
-      } catch (error) {
-        console.error("Error fetching categories:", error);
+  const token = localStorage.getItem("token");
+  const fetchData = async () => {
+    try {
+      const response = await axios.get(`${Configuration.BASE_URL}/categories`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      console.log("RAW RESPONSE:", response);
+
+      if (Array.isArray(response.data)) {
+        setData(response.data);
+      } else {
+        console.warn("Expected an array but got:", response.data);
+        setData([]);
       }
-    };
-
+    } catch (error) {
+      console.error("Error fetching categories:", error);
+      setData([]);
+    }
+  };
+  useEffect(() => {
     fetchData();
-  }, [categoryCreated]);
+  }, [categoryCreated, token]);
 
-   // Filter based on the search term
-   const filteredData = useMemo(() => {
+  // Filter based on the search term
+  const filteredData = useMemo(() => {
+    if (!Array.isArray(data)) return [];
     return data.filter((item) =>
       item.name.toLowerCase().includes(searchTerm.toLowerCase())
     );
   }, [data, searchTerm]);
 
-    const totalPages = useMemo(() => Math.ceil(filteredData.length / rowsPerPage), [
-      filteredData,
-      rowsPerPage,
-    ]);
-    const start = useMemo(() => (page - 1) * rowsPerPage, [page, rowsPerPage]);
-    const end = useMemo(() => start + rowsPerPage, [start, rowsPerPage]);
-    const pageData = useMemo(() => filteredData.slice(start, end), [
-      filteredData,
-      start,
-      end,
-    ]);
-  
-    const handlePageChange = useCallback((newPage) => setPage(newPage), []);
+  const totalPages = useMemo(
+    () => Math.ceil(filteredData.length / rowsPerPage),
+    [filteredData, rowsPerPage]
+  );
+  const start = useMemo(() => (page - 1) * rowsPerPage, [page, rowsPerPage]);
+  const end = useMemo(() => start + rowsPerPage, [start, rowsPerPage]);
+  const pageData = useMemo(
+    () => filteredData.slice(start, end),
+    [filteredData, start, end]
+  );
 
-    const handleRowsPerPageChange = useCallback((value) => {
-      setRowsPerPage(parseInt(value, 10));
-      setPage(1);
-    }, []);
-  
-    const handleSelectAll = useCallback(() => {
-      setSelectAll((prev) => !prev);
-      setSelectedRows((prev) =>
-        prev.length === pageData.length ? [] : pageData.map((item) => item.slug)
-      );
-    }, [pageData]);
-  
-    const handleRowSelect = useCallback((slug) => {
-      setSelectedRows((prev) =>
-        prev.includes(slug) ? prev.filter((id) => id !== slug) : [...prev, slug]
-      );
-    }, []);
-  
+  const handlePageChange = useCallback((newPage) => setPage(newPage), []);
+
+  const handleRowsPerPageChange = useCallback((value) => {
+    setRowsPerPage(parseInt(value, 10));
+    setPage(1);
+  }, []);
+
+  const handleSelectAll = useCallback(() => {
+    setSelectAll((prev) => !prev);
+    setSelectedRows((prev) =>
+      prev.length === pageData.length ? [] : pageData.map((item) => item.slug)
+    );
+  }, [pageData]);
+
+  const handleRowSelect = useCallback((slug) => {
+    setSelectedRows((prev) =>
+      prev.includes(slug) ? prev.filter((id) => id !== slug) : [...prev, slug]
+    );
+  }, []);
+
   //delete
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [selectedCategorySlug, setSelectedCategorySlug] = useState(null); 
+  const [selectedCategorySlug, setSelectedCategorySlug] = useState(null);
 
   const handleDeleteClick = useCallback((slug) => {
     setSelectedCategorySlug(slug);
@@ -96,65 +104,74 @@ const CategoryTable = ({categoryCreated }) => {
   const handleConfirmDelete = useCallback(async () => {
     try {
       await axios.delete(
-        `http://localhost:5000/api/categories/delete/${selectedCategorySlug}`
+        `${Configuration.BASE_URL}/categories/delete/${selectedCategorySlug}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
       );
-      const response = await fetch("http://localhost:5000/api/categories");
-      if (response.ok) {
-        const result = await response.json();
-        setData(result);
-        navigate("/categories");
-      } else {
-        const errorData = await response.json();
-        console.error(
-          errorData.error || "Failed to refresh categories after deletion"
-        );
-      }
+      const response = await axios.get(`${Configuration.BASE_URL}/categories`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      setData(response.data);
+      navigate("/categories");
       setDeleteDialogOpen(false);
       setSelectedCategorySlug(null);
     } catch (error) {
       console.error("Error deleting category:", error);
     }
-  }, [selectedCategorySlug, navigate]);
+  }, [selectedCategorySlug, navigate, token]);
 
-const handleCancelDelete = () => {
+  const handleCancelDelete = () => {
     setDeleteDialogOpen(false);
     setSelectedCategorySlug(null);
-};
-//view
+  };
+  //view
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState(null);
 
-  const handleViewClick = useCallback(async (slug) => {
-    try {
-      const response = await axios.get(
-        `http://localhost:5000/api/categories/${slug}`
-      );
-      setSelectedCategory(response.data);
-      setViewDialogOpen(true);
-    } catch (error) {
-      console.error("Error fetching category details:", error);
-    }
-  }, []);
+  const handleViewClick = useCallback(
+    async (slug) => {
+      try {
+        const response = await axios.get(
+          `${Configuration.BASE_URL}/categories/${slug}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        setSelectedCategory(response.data);
+        setViewDialogOpen(true);
+      } catch (error) {
+        console.error("Error fetching category details:", error);
+      }
+    },
+    [token]
+  );
 
   const handleCloseView = useCallback(() => {
     setViewDialogOpen(false);
     setSelectedCategory(null);
   }, []);
-  
-//edit
-const [editDialogOpen, setEditDialogOpen] = useState(false);
-const [selectedCategoryToEdit, setSelectedCategoryToEdit] = useState(null);
 
+  //edit
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [selectedCategoryToEdit, setSelectedCategoryToEdit] = useState(null);
 
   return (
     <div className="p-4">
       <div className="rounded-md border bg-white">
         <div className=" border-b">
           <div className="flex justify-end items-center my-3 mx-5">
-            <Input placeholder="Search" 
-                   className="w-[300px]"
-                   onChange={(e) => setSearchTerm(e.target.value)} 
-                   />
+            <Input
+              placeholder="Search"
+              className="w-[300px]"
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
           </div>
         </div>
         <Table>
@@ -202,7 +219,7 @@ const [selectedCategoryToEdit, setSelectedCategoryToEdit] = useState(null);
               handlePageChange={handlePageChange}
             />
           </TableFooter>
-          </Table>
+        </Table>
         <DeleteMessageDialog
           open={deleteDialogOpen}
           onOpenChange={setDeleteDialogOpen}
@@ -222,12 +239,7 @@ const [selectedCategoryToEdit, setSelectedCategoryToEdit] = useState(null);
           open={editDialogOpen}
           onOpenChange={setEditDialogOpen}
           category={selectedCategoryToEdit}
-          onCategoryUpdated={() => {
-            // Refresh your category data here
-            fetch("http://localhost:5000/api/categories")
-              .then((response) => response.json())
-              .then((result) => setData(result));
-          }}
+          onCategoryUpdated={fetchData} // Refresh category list after editing
         />
       </div>
     </div>

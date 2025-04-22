@@ -6,18 +6,26 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { toast } from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
-
+import axios from "axios";
+import { Configuration } from "../../../Configure";
 export default function EditCategoryDialog({ open, onOpenChange, category, onCategoryUpdated }) {
   const [isVisible, setIsVisible] = useState(true);
   const [name, setName] = useState("");
   const navigate = useNavigate();
+  const token = localStorage.getItem("token");
 
   useEffect(() => {
     if (category) {
-      setName(category.name);
-      setIsVisible(category.visibility === 1);
+      setName(category.name || "");
+        const visibility =
+        category.visibility === 1 ||
+        category.visibility === "1" ||
+        category.visibility === true;
+  
+      setIsVisible(visibility);
     }
   }, [category]);
+  
 
   const handleUpdate = useCallback(async () => {
     if (!name) {
@@ -25,30 +33,28 @@ export default function EditCategoryDialog({ open, onOpenChange, category, onCat
       return;
     }
     try {
-      const response = await fetch(`http://localhost:5000/api/categories/${category.slug}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
+      await axios.put(`${Configuration.BASE_URL}/categories/${category.slug}`, 
+        {
           name,
           visibility: isVisible ? 1 : 0,
-        }),
-      });
-      if (response.ok) {
+        },
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
         toast.success("Category updated successfully!");
         onOpenChange(false); // Close the dialog
         onCategoryUpdated(); // Refresh category list
         navigate("/categories");
-      } else {
-        const errorData = await response.json();
-        toast.error(errorData.error || "Failed to update category.");
-      }
+
     } catch (error) {
       console.error("Error updating category:", error);
       toast.error("An error occurred while updating the category.");
     }
-  }, [name, isVisible, category, onOpenChange, onCategoryUpdated, navigate]);
+  }, [name, isVisible, category, onOpenChange, onCategoryUpdated, navigate,token]);
 
   const handleCancel = useCallback(() => {
     onOpenChange(false);
