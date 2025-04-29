@@ -6,9 +6,9 @@ const verifyToken = require('../middleware/authMiddleware');
 router.use(verifyToken);
 router.get('/getall', authorsController.getAllAuthors);
 router.get('/names', authorsController.getAllAuthorNames);
-router.get('/:slug', authorsController.getAuthorBySlug);
+router.get('/:id', authorsController.getAuthorById);
 router.post('/create', authorsController.createAuthor);
-router.put('/update/:slug', authorsController.updateAuthor);
-router.delete('/delete/:slug', authorsController.deleteAuthor);
+router.put('/update/:id', authorsController.updateAuthor);
+router.delete('/delete/:id', authorsController.deleteAuthor);
 
 module.exports = router;

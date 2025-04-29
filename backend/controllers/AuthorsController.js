@@ -27,13 +27,13 @@ exports.getAllAuthorNames = async (req, res) => {
 };
 
 // get author by mail
-exports.getAuthorBySlug = async (req, res) => {
+exports.getAuthorById = async (req, res) => {
     const { email } = req.params;
     try {
         const author = await db
             .select()
             .from(authors)
-            .where(eq(authors.slug, slug));
+            .where(eq(authors.id, id));
         if (author.length === 0) {
             return res.status(404).json({ error: "Author not found" });
         }
@@ -56,7 +56,7 @@ exports.createAuthor = async (req, res) => {
         // Check for existing mail
         const existing = await db.select().from(authors).where(eq(authors.email, email));
         if (existing.length > 0) {
-            return res.status(400).json({ error: "Author with this slug already exists" });
+            return res.status(400).json({ error: "Author with this email already exists" });
         }
         const now = new Date();
         const newAuthor = {
@@ -68,6 +68,7 @@ exports.createAuthor = async (req, res) => {
             created_at: now,
             updated_at: now,
         };
+        console.log('Author:', newAuthor); 
         await db.insert(authors).values(newAuthor);
         res.status(201).json({ message: "Author created", author: newAuthor });
     } catch (error) {
