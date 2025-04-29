@@ -47,4 +47,16 @@ const users = mysqlTable("users", {
   updated_at: timestamp("updated_at").onUpdateNow(),
 });
 
-module.exports = { categories, posts, users };
+const authors = mysqlTable("authors", {
+  id: int("id").primaryKey().autoincrement(),
+  name: varchar("name", { length: 255 }).notNull(),
+  email: varchar("email", { length: 255 }).notNull().unique(),
+  bio: text("bio"),
+  github_handle: varchar("github_handle", { length: 255 }),
+  twitter_handle: varchar("twitter_handle", { length: 255 }),
+  created_at: timestamp("created_at").defaultNow(),
+  updated_at: timestamp("updated_at").onUpdateNow(),
+});
+
+
+module.exports = { categories, posts, users, authors };
