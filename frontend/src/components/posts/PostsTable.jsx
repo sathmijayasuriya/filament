@@ -18,17 +18,16 @@ import { Button } from "@/components/ui/button";
   import { toast } from "react-hot-toast";
   import PostsTableHeader from "./PostsTableHeader";
   import PostsTablePagination from "./PostsTablePagination ";
-  import axios from "axios";
-  import { Configuration } from "../../../Configure";
+  import { useQuery ,useMutation} from "@tanstack/react-query";
+  import { fetchPosts,deletePost } from "../../api/postApi";
+  import { useQueryClient } from "@tanstack/react-query";
 
   const PostsTable = () => {
 
-    const [data, setData] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
+    const queryClient = useQueryClient();
     const [sorting, setSorting] = useState([]);
+    const [tableData, setTableData] = useState([]);
     const [columnFilters, setColumnFilters] = useState([]);
-    // const [columnVisibility, setColumnVisibility] = useState({});
     const [rowSelection, setRowSelection] = useState({});
     const [perPage, setPerPage] = useState(5);
     const [currentPage, setCurrentPage] = useState(1); 
@@ -39,96 +38,52 @@ import { Button } from "@/components/ui/button";
       category_name: false,
       post_slug: false,
     });  
-    const token = localStorage.getItem("token");
+    
     const formatLocalDate = (date) => {
       const year = date.getFullYear();
       const month = String(date.getMonth() + 1).padStart(2, '0');
       const day = String(date.getDate()).padStart(2, '0');
       return `${year}-${month}-${day}`;
     };
-    const fetchData = async () => {
-      try {
-        const url = new URL(`${Configuration.BASE_URL}/posts/posts`);
-        if (startDate) {
-          const formattedStartDate = formatLocalDate(startDate);
-          console.log("Formatted Start Date:", formattedStartDate);
-          url.searchParams.append('from', formattedStartDate);
-        }
-        if (endDate) {
-          const formattedEndDate = formatLocalDate(endDate);
-          console.log("Formatted End Date:", formattedEndDate);
-          url.searchParams.append('to', formattedEndDate);
-        }
-        const response = await axios.get(url.toString(), {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          }
-        });
-        setData(response.data);
-      } catch (err) {
-        setError(err);
-      } finally {
-        setLoading(false);
-      }
-    };    
-    useEffect(() => {
-      // setCurrentPage(1); // Reset to the first page
-      // setLoading(true);
-      fetchData();
-      console.log("Start Date:", startDate);
-      console.log("End Date:", endDate);    
-    }, [startDate, endDate]);
+    const formattedStart = startDate ? formatLocalDate(startDate) : undefined;
+    const formattedEnd = endDate ? formatLocalDate(endDate) : undefined;
 
-    
+    const { data, isLoading, isError, error, refetch } = useQuery({
+      queryKey: ["posts", { from: formattedStart, to: formattedEnd }],
+      queryFn: fetchPosts,
+      staleTime: 5 * 60 * 1000, // 5 minutes caching
+      // enabled: !!token, 
+    });
+
     //delete
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const [selectedPostSlug, setSelectedPostSlug] = useState(null);
     
+        
+    const {mutate: deleteMutation} = useMutation({
+      mutationFn: deletePost,
+      onSuccess: () => {
+        toast.success("Post deleted successfully!");
+        // refetch(); 
+        setDeleteDialogOpen(false);        
+        // setSelectedPostSlug(null);
+        queryClient.invalidateQueries(["posts"]);
+      },
+      onError: (error) => {
+        console.error("Error deleting post:", error);
+        toast.error("An error occurred while deleting the post.");
+      },
+    })
+    const handleConfirmDelete = useCallback(async () => {
+      if(selectedPostSlug) {
+        deleteMutation(selectedPostSlug);
+      }
+    }, [selectedPostSlug,deleteMutation]);
+
     const handleDeleteClick = useCallback((slug) => {
       setSelectedPostSlug(slug);
       setDeleteDialogOpen(true);
     }, []);
-
-    const handlePostDeleted = useCallback(async () => {
-      try {
-        const token = localStorage.getItem("token");
-        const response = await axios.get(`${Configuration.BASE_URL}/posts/posts`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        setData(response.data);
-      } catch (error) {
-        console.error("Error fetching posts:", error);
-      }
-    }, []);
-        
-    
-    const handleConfirmDelete = useCallback(async () => {
-      try {
-        const token = localStorage.getItem("token");
-        const response = await axios.delete(`${Configuration.BASE_URL}/posts/delete/${selectedPostSlug}`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        if (response.status==200) {
-          // setData((prevData) => prevData.filter((post) => post.slug !== selectedPostSlug));
-          toast.success("Post deleted successfully!");
-          await fetchData(); // refresh posts 
-            } else {
-          toast.error("Failed to delete post.");
-        }
-        setDeleteDialogOpen(false);
-        setSelectedPostSlug(null);
-      } catch (error) {
-        console.error("Error deleting post:", error);
-        toast.error(
-          error.response?.data?.error || "An error occurred while deleting the post."
-        );
-          }
-    }, [selectedPostSlug, fetchData]);
-
 
     const columns = useMemo( ()=> [
       {
@@ -305,7 +260,7 @@ import { Button } from "@/components/ui/button";
     ], [handleDeleteClick, navigate]);
 
     const table = useReactTable({
-      data,
+      data: data || [],
       columns,
       getCoreRowModel: getCoreRowModel(),
       getPaginationRowModel: getPaginationRowModel(),
@@ -336,8 +291,9 @@ import { Button } from "@/components/ui/button";
     });
 
     const selectedRowCount = Object.keys(rowSelection).length;
-    if (loading) return <div>Loading...</div>;
-    if (error) return <div>Error: {error.message}</div>;
+
+    if (isLoading) return <div>Loading posts...</div>;
+    if (isError) return <div>Error: {error.message}</div>;
 
     return (
       <div className="p-4">
@@ -350,7 +306,7 @@ import { Button } from "@/components/ui/button";
             setEndDate={setEndDate}
             rowSelection={rowSelection}
             setRowSelection={setRowSelection}
-            data={data}
+            data={tableData}
           />
     <div className="w-full overflow-x-auto">
     <Table className="w-full min-w-[100px] border-collapse">
@@ -403,7 +359,7 @@ import { Button } from "@/components/ui/button";
             open={deleteDialogOpen}
             onOpenChange={setDeleteDialogOpen}
             slug={selectedPostSlug}
-            onPostDeleted={handlePostDeleted}
+            onPostDeleted={handleDeleteClick}
             onConfirm={handleConfirmDelete}
             onCancel={() => setDeleteDialogOpen(false)}
             title="Delete Post"
@@ -415,7 +371,7 @@ import { Button } from "@/components/ui/button";
             setCurrentPage={setCurrentPage}
             perPage={perPage}
             setPerPage={setPerPage}
-            data={data}
+            data={tableData}
             rowSelection={rowSelection}
             setRowSelection={setRowSelection}
           />
