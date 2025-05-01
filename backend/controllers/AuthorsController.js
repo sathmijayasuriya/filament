@@ -28,7 +28,7 @@ exports.getAllAuthorNames = async (req, res) => {
 
 // get author by mail
 exports.getAuthorById = async (req, res) => {
-    const { email } = req.params;
+    const { id } = req.params;
     try {
         const author = await db
             .select()
