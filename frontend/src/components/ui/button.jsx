@@ -1,7 +1,7 @@
 import * as React from "react"
 import { Slot } from "@radix-ui/react-slot"
 import { cva } from "class-variance-authority";
-
+import { Loader2 } from "lucide-react" 
 import { cn } from "@/lib/utils"
 
 const buttonVariants = cva(
@@ -9,7 +9,7 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-white text-gray-0 shadow-xs ", // ✅ Updated default colors
+        default: "bg-white text-gray-0 shadow-xs ", 
         destructive:
           "bg-destructive text-white shadow-xs hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40",
         outline:

@@ -1,5 +1,4 @@
-import React from "react";
-import { useState, useMemo, useCallback } from "react";
+import React, { useState, useMemo, useCallback } from "react";
 import {
     getCoreRowModel,
     getPaginationRowModel,
@@ -29,6 +28,7 @@ import {
     deleteAuthor,
     editAuthor,
 } from "../../api/authorsApi";
+import { Loader2 } from "lucide-react";
 
 export default function AuthorsTable() {
     const queryClient = useQueryClient();
@@ -37,6 +37,7 @@ export default function AuthorsTable() {
     const [perPage, setPerPage] = useState(5);
     const [currentPage, setCurrentPage] = useState(1);
     const [searchTerm, setSearchTerm] = useState("");
+
     const {
         data: authors = [],
         isLoading,
@@ -45,53 +46,58 @@ export default function AuthorsTable() {
     } = useQuery({
         queryKey: ["authors"],
         queryFn: fetchAuthors,
-        staleTime: 1000 * 60 * 5, // 5 minutes
-        onSuccess: (data) => {
-            console.log("Authors fetched successfully:", data);
-        },
+        staleTime: 1000 * 60 * 5,
         onError: (error) => {
             console.error("Error fetching authors:", error);
             toast.error("Error fetching authors");
         },
     });
+
     const selectedRowCount = Object.keys(rowSelection).length;
 
-    // view author by id
-    const [viewDialogOpen, setViewDialogOpen] = useState(false);
+    // Dialog states for loading indicators
     const [selectedAuthor, setSelectedAuthor] = useState(null);
+    const [viewDialogOpen, setViewDialogOpen] = useState(false);
+    const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+    const [editDialogOpen, setEditDialogOpen] = useState(false);
+    const [confirmLoading, setConfirmLoading] = useState(false);
 
-    console.log("selectedAuthor", selectedAuthor);
+    const [loadingViewId, setLoadingViewId] = useState(null);
+    const [loadingEditId, setLoadingEditId] = useState(null);
+    const [loadingDeleteId, setLoadingDeleteId] = useState(null);
+
+    //view author data
     const { data: selectedAuthorData } = useQuery({
         queryKey: ["authorData", selectedAuthor],
         queryFn: () => fetchAuthorById(selectedAuthor),
         enabled: !!selectedAuthor,
-        onSuccess: () => {
-            console.log(
-                "Author data fetched successfully:",
-                selectedAuthorData
-            );
-        },
-        onError: (error) => {
-            console.error("Error fetching author data:", error);
-            toast.error("Error fetching author data");
-        },
+        onError: () => toast.error("Error fetching author data"),
     });
+
     const handleViewClick = useCallback((id) => {
-        setSelectedAuthor(id);
-        setViewDialogOpen(true);
-    });
+        setLoadingViewId(id);
+        setTimeout(() => {
+            setSelectedAuthor(id);
+            setViewDialogOpen(true);
+            setLoadingViewId(null);
+        }, 2000);
+    }, []);
+
     const handleCloseView = useCallback(() => {
         setViewDialogOpen(false);
-        selectedAuthor(null);
-    });
+        setSelectedAuthor(null);
+    }, []);
 
-    //Delete author
-    const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-
+    //delete
     const handleDeleteClick = useCallback((id) => {
-        setSelectedAuthor(id);
-        setDeleteDialogOpen(true);
-    });
+        setLoadingDeleteId(id);
+        setTimeout(() => {
+            setSelectedAuthor(id);
+            setDeleteDialogOpen(true);
+            setLoadingDeleteId(null);
+        }, 1000);
+    }, []);
+
     const { mutate: deleteMutation } = useMutation({
         mutationFn: deleteAuthor,
         onSuccess: () => {
@@ -99,33 +105,41 @@ export default function AuthorsTable() {
             setDeleteDialogOpen(false);
             toast.success("Author deleted successfully");
         },
-        onError: (error) => {
-            console.error("Error deleting author:", error);
-            toast.error("Error deleting author");
-        },
+        onError: () => toast.error("Error deleting author"),
     });
+
     const handleConfirmDelete = useCallback(() => {
-        if (selectedAuthor) {
-            deleteMutation(selectedAuthor);
-        }
-    }, [selectedAuthor, deleteMutation]);
+        if (!selectedAuthor) return;
+        setConfirmLoading(true);
+        setTimeout(() => {
+            deleteMutation(selectedAuthor, {
+                onSettled: () => {
+                    setConfirmLoading(false);
+                },
+            });
+        }, 1000);
+        }, [selectedAuthor, deleteMutation]);
 
     const handleCancelDelete = useCallback(() => {
         setDeleteDialogOpen(false);
         setSelectedAuthor(null);
-    });
+    }, []);
 
-    //Edit author
-    const [editDialogOpen, setEditDialogOpen] = useState(false);
-
+    //edit
     const handleEditClick = useCallback((id) => {
-        setSelectedAuthor(id);
-        setEditDialogOpen(true);
-    });
+        setLoadingEditId(id);
+        setTimeout(() => {
+            setSelectedAuthor(id);
+            setEditDialogOpen(true);
+            setLoadingEditId(null);
+        }, 1000);
+    }, []);
+
     const handleCloseEdit = useCallback(() => {
         setEditDialogOpen(false);
         setSelectedAuthor(null);
-    });
+    }, []);
+
     const { mutate: editMutation, isLoading: isLoadingEdit } = useMutation({
         mutationFn: ({ id, data }) => editAuthor(id, data),
         onSuccess: () => {
@@ -133,25 +147,14 @@ export default function AuthorsTable() {
             setEditDialogOpen(false);
             toast.success("Author edited successfully");
         },
-        onError: (error) => {
-            console.error("Error editing author:", error);
-            toast.error("Error editing author");
-        },
+        onError: () => toast.error("Error editing author"),
     });
-    const handleConfirmEdit = useCallback(
-        (updatedData) => {
-            if (!updatedData.name) {
-                toast.error("Please enter a name");
-                return;
-            }
-            if (!updatedData.email) {
-                toast.error("Please enter an email");
-                return;
-            }
-            editMutation({ id: selectedAuthor, data: updatedData });
-        },
-        [selectedAuthor, editMutation]
-    );
+
+    const handleConfirmEdit = useCallback((updatedData) => {
+        if (!updatedData.name) return toast.error("Please enter a name");
+        if (!updatedData.email) return toast.error("Please enter an email");
+        editMutation({ id: selectedAuthor, data: updatedData });
+    }, [selectedAuthor, editMutation]);
 
     const filteredData = useMemo(() => {
         if (!Array.isArray(authors)) return [];
@@ -160,122 +163,132 @@ export default function AuthorsTable() {
         );
     }, [authors, searchTerm]);
 
-    const columns = useMemo(
-        () => [
-            {
-                id: "select",
-                header: ({ table }) => (
-                    <div className="flex items-center justify-center">
-                        {" "}
-                        {/* added flex items center justify center */}
-                        <Checkbox
-                            checked={
-                                table.getIsAllPageRowsSelected() ||
-                                (table.getIsSomePageRowsSelected() &&
-                                    "indeterminate")
-                            }
-                            onCheckedChange={(value) =>
-                                table.toggleAllPageRowsSelected(!!value)
-                            }
-                            aria-label="Select all rows"
-                        />
-                    </div>
-                ),
-                cell: ({ row }) => (
-                    <div className="flex items-center justify-center">
-                        {" "}
-                        {/* added flex items center justify center */}
-                        <Checkbox
-                            checked={row.getIsSelected()}
-                            onCheckedChange={(value) =>
-                                row.toggleSelected(!!value)
-                            }
-                            aria-label="Select row"
-                        />
-                    </div>
-                ),
-                enableSorting: false,
-                enableHiding: false,
+    const columns = useMemo(() => [
+        {
+            id: "select",
+            header: ({ table }) => (
+                <div className="flex items-center justify-center">
+                    <Checkbox
+                        checked={
+                            table.getIsAllPageRowsSelected() ||
+                            (table.getIsSomePageRowsSelected() && "indeterminate")
+                        }
+                        onCheckedChange={(value) =>
+                            table.toggleAllPageRowsSelected(!!value)
+                        }
+                        aria-label="Select all rows"
+                    />
+                </div>
+            ),
+            cell: ({ row }) => (
+                <div className="flex items-center justify-center">
+                    <Checkbox
+                        checked={row.getIsSelected()}
+                        onCheckedChange={(value) =>
+                            row.toggleSelected(!!value)
+                        }
+                        aria-label="Select row"
+                    />
+                </div>
+            ),
+            enableSorting: false,
+            enableHiding: false,
+        },
+        {
+            accessorKey: "nameEmail",
+            cell: ({ row }) => (
+                <div className="flex flex-col">
+                    <span className="font-semibold">{row.original.name}</span>
+                    <span className="text-gray-500 text-sm">{row.original.email}</span>
+                </div>
+            ),
+            sortingFn: (a, b) => {
+                const nameA = a.original.name.toLowerCase();
+                const nameB = b.original.name.toLowerCase();
+                return nameA.localeCompare(nameB);
             },
-            {
-                accessorKey: "nameEmail",
-                cell: ({ row }) => (
-                    <div className="flex flex-col">
-                        <span className="font-semibold">
-                            {row.original.name}
-                        </span>
-                        <span className="text-gray-500 text-sm">
-                            {row.original.email}
-                        </span>
-                    </div>
-                ),
-                sortingFn: (a, b, columnId) => {
-                    const nameA = a.original.name.toLowerCase();
-                    const nameB = b.original.name.toLowerCase();
-                    return nameA.localeCompare(nameB);
-                },
-            },
-            {
-                accessorKey: "socialHandles",
-                cell: ({ row }) => (
-                    <div className="flex flex-col">
-                        <span className="font-semibold">
-                            <GitHubLogoIcon className="text-gray-500 h-4 w-4 inline-block mr-1" />
-                            {row.original.github_handle}
-                        </span>
-                        <span className="text-gray-500 text-sm">
-                            <TwitterLogoIcon className="text-gray-500 h-4 w-4 inline-block mr-1" />
-                            {row.original.twitter_handle}
-                        </span>
-                    </div>
-                ),
-            },
-            {
-                id: "actions",
-                header: "",
-                cell: ({ row }) => (
-                    <div className="flex space-x-5  justify-end">
+        },
+        {
+            accessorKey: "socialHandles",
+            cell: ({ row }) => (
+                <div className="flex flex-col">
+                    <span className="font-semibold">
+                        <GitHubLogoIcon className="text-gray-500 h-4 w-4 inline-block mr-1" />
+                        {row.original.github_handle}
+                    </span>
+                    <span className="text-gray-500 text-sm">
+                        <TwitterLogoIcon className="text-gray-500 h-4 w-4 inline-block mr-1" />
+                        {row.original.twitter_handle}
+                    </span>
+                </div>
+            ),
+        },
+        {
+            id: "actions",
+            header: "",
+            cell: ({ row }) => {
+                const isViewLoading = loadingViewId === row.original.id;
+                const isEditLoading = loadingEditId === row.original.id;
+                const isDeleteLoading = loadingDeleteId === row.original.id;
+
+                return (
+                    <div className="flex space-x-5 justify-end">
+                        {/* View */}
                         <div className="flex items-center space-x-[-10px]">
-                            <EyeIcon className="text-[#A2A2AB] h-4 w-4" />
+                            {isViewLoading ? (
+                                <Loader2 className="h-4 w-4 animate-spin text-gray-500" />
+                            ) : (
+                                <EyeIcon className="text-[#A2A2AB] h-4 w-4" />
+                            )}
                             <Button
                                 className="text-[#A2A2AB]"
                                 variant="link"
                                 size="sm"
                                 onClick={() => handleViewClick(row.original.id)}
+                                disabled={isViewLoading}
                             >
                                 View
                             </Button>
                         </div>
+                        {/* Edit */}
                         <div className="flex items-center space-x-[-10px]">
-                            <PencilSquareIcon className="text-orange-500 h-4 w-4" />
+                            {isEditLoading ? (
+                                <Loader2 className="h-4 w-4 animate-spin text-orange-500" />
+                            ) : (
+                                <PencilSquareIcon className="text-orange-500 h-4 w-4" />
+                            )}
                             <Button
                                 className="text-orange-500"
                                 variant="link"
                                 size="sm"
                                 onClick={() => handleEditClick(row.original.id)}
+                                disabled={isEditLoading}
                             >
                                 Edit
                             </Button>
                         </div>
+                        {/* Delete */}
                         <div className="flex items-center space-x-[-10px]">
-                            <TrashIcon className="text-red-500 h-4 w-4" />
+                            {isDeleteLoading ? (
+                                <Loader2 className="h-4 w-4 animate-spin text-red-500" />
+                            ) : (
+                                <TrashIcon className="text-red-500 h-4 w-4" />
+                            )}
                             <Button
                                 className="text-red-500"
                                 variant="link"
                                 size="sm"
-                                onClick={() =>
-                                    handleDeleteClick(row.original.id)
-                                }
+                                onClick={() => handleDeleteClick(row.original.id)}
+                                disabled={isDeleteLoading}
                             >
                                 Delete
                             </Button>
                         </div>
                     </div>
-                ),
+                );
             },
-        ],
-        []
-    );
+        },
+    ], [loadingViewId, loadingEditId, loadingDeleteId]);
 
     const table = useReactTable({
         data: filteredData,
@@ -301,7 +314,7 @@ export default function AuthorsTable() {
     return (
         <div className="p-4">
             <div className="rounded-md border bg-white">
-                <div className=" border-b">
+                <div className="border-b">
                     <div className="flex justify-end items-center my-3 mx-5">
                         <Input
                             placeholder="Search"
@@ -310,7 +323,6 @@ export default function AuthorsTable() {
                         />
                     </div>
                 </div>
-                {/* <div className="w-full overflow-x-auto"> */}
                 <Table>
                     <TableBody>
                         {table.getRowModel().rows.map((row) => (
@@ -318,9 +330,7 @@ export default function AuthorsTable() {
                                 noBorder
                                 key={row.id}
                                 className={`hover:bg-gray-100 ${
-                                    row.getIsSelected()
-                                        ? "border-l-2 border-orange-400"
-                                        : ""
+                                    row.getIsSelected() ? "border-l-2 border-orange-400" : ""
                                 } cursor-pointer`}
                             >
                                 {row.getVisibleCells().map((cell) => (
@@ -342,7 +352,6 @@ export default function AuthorsTable() {
                         ))}
                     </TableBody>
                 </Table>
-                {/* </div> */}
                 <TablePagination
                     table={table}
                     data={filteredData}
@@ -364,8 +373,10 @@ export default function AuthorsTable() {
                     onConfirm={handleConfirmDelete}
                     onCancel={handleCancelDelete}
                     title="Delete Author"
-                    message={`Are you sure you want to delete this author?`}
+                    message="Are you sure you want to delete this author?"
                     slug={selectedAuthor}
+                    loading={confirmLoading}
+                    
                 />
                 <EditAuthorDialog
                     open={editDialogOpen}
