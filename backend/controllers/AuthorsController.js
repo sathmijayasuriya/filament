@@ -1,5 +1,5 @@
 const { db, authors } = require("../db");
-const { eq, sql } = require("drizzle-orm");
+const { eq, sql ,inArray} = require("drizzle-orm");
 
 //get all authors
 exports.getAllAuthors = async (req, res) => {
@@ -115,3 +115,26 @@ exports.deleteAuthor = async (req, res) => {
         return res.status(500).json({ error: "Internal server error" });
     }
 }
+
+
+// delete bulk authors
+exports.deleteBulkAuthors = async (req, res) => {
+    const { ids } = req.body;
+
+    console.log("Received IDs for deletion:", ids);
+
+    if (!Array.isArray(ids) || ids.length === 0) {
+        return res.status(400).json({ error: "Invalid or missing 'ids' array" });
+    }
+
+    try {
+        await db.delete(authors).where(
+            inArray(authors.id, ids)
+        );
+
+        return res.status(200).json({ message: "Authors deleted successfully" });
+    } catch (error) {
+        console.error("Bulk delete failed:", error);
+        return res.status(500).json({ error: "Internal server error" });
+    }
+};
