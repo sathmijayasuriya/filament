@@ -5,6 +5,9 @@
   const postsRoutes = require('./routes/posts');
   const authRoutes = require('./routes/auth');  //JWT
   const authorsRoutes = require('./routes/authors'); 
+  const linksRoutes = require('./routes/links');
+  const path = require('path'); 
+
   dotenv.config();
 
   const app = express();
@@ -16,6 +19,8 @@
   app.use('/api/posts', postsRoutes);
   app.use('/api/auth', authRoutes); 
   app.use('/api/authors', authorsRoutes);
+  app.use('/api/links', linksRoutes);
+  app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 
   const PORT = process.env.PORT || 5000;
