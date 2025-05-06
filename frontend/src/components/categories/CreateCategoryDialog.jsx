@@ -31,7 +31,7 @@ import { useQueryClient } from "@tanstack/react-query";
 export default function CreateCategoryDialog({
     open,
     onOpenChange,
-    onConfirm,
+    o,
     onCancel,
 }) {
     const queryClient = useQueryClient();
@@ -59,7 +59,7 @@ export default function CreateCategoryDialog({
             setIsVisible(true);
             setDescription("");
             navigate("/categories");
-        },
+        },  
         onError: (error) => {
             console.error("Error creating category:", error);
             const message =
