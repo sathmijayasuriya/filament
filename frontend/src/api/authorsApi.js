@@ -70,3 +70,17 @@ export const fetchAuthorById = async (id) => {
         throw error;
     }
 }
+
+// delete multiple authors
+export const deleteMultipleAuthors = async (ids) => {
+    try {
+        const response = await axiosInstance.post("/authors/delete-bulk", { ids });
+        if (response.status !== 200 && response.status !== 201) {
+            throw new Error("Failed to delete authors");
+        }
+        return response.data;
+    } catch (error) {
+        console.error("Error deleting authors:", error);
+        throw error;
+    }
+}
