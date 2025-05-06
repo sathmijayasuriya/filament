@@ -68,7 +68,6 @@ export default function AuthorsTable() {
         },
     });
 
-    const selectedRowCount = Object.keys(rowSelection).length;
 
     // Dialog states for loading indicators
     const [selectedAuthor, setSelectedAuthor] = useState(null);
@@ -366,7 +365,7 @@ export default function AuthorsTable() {
                 ]);
             }
         }, [sortField, sortDirection, table]);
-
+        const selectedRowCount = table.getSelectedRowModel().rows.length;
         const selectedAuthorIds = table
         .getSelectedRowModel()
         .rows.map((row) => row.original.id);

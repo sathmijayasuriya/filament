@@ -32,8 +32,9 @@ import MenuBarComponent from './PostViewMenu';
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { editPost ,fetchPostBySlug} from "../../api/postApi";
 import { fetchCategoriesByNames } from "../../api/categoryApi";
-
+import { useQueryClient } from "@tanstack/react-query";
 const EditPostForm = () => {
+  const queryClient = useQueryClient();  
   const { slug } = useParams();
   const navigate = useNavigate();
 
@@ -99,6 +100,7 @@ const EditPostForm = () => {
     mutationFn: ({ slug, data }) => editPost(slug, data),
     onSuccess: () => {
       toast.success("Post updated successfully!");
+      queryClient.invalidateQueries(["posts"]);
       navigate(`/posts/${generateSlug(title)}`);
     },
     onError: (error) => {

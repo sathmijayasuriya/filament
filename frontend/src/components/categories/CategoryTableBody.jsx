@@ -72,7 +72,7 @@ const CategoryTableBody = ({
           <TableCell className="border-b">
             {format(new Date(item.updated_at), "yyyy-MM-dd")}
           </TableCell>
-          <TableCell className="flex space-x-2 border-b">
+          <TableCell className="flex space-x-2 border-b justify-end">
             <div className="flex space-x-2">
               <div className="flex items-center space-x-[-10px]">
                 <EyeIcon className="text-[#A2A2AB] h-4 w-4" />

@@ -114,7 +114,7 @@ const PostForm = () => {
       toast.success("Post created successfully!");
       resetForm();
       queryClient.invalidateQueries(["posts"]);
-        navigate("/posts");
+      navigate("/posts");
     },
     onError: (error) => {
       console.error("Error creating post:", error);

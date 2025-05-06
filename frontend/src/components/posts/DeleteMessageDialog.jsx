@@ -2,11 +2,8 @@ import React from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { TrashIcon } from "@heroicons/react/24/outline";
-import { toast } from "react-hot-toast";
-import { useNavigate } from "react-router-dom";
 
-function DeleteMessageDialog({ open, onOpenChange, onConfirm, onCancel, title, description, slug, onPostDeleted }) {
-    const navigate = useNavigate();
+function DeleteMessageDialog({ open, onOpenChange, onConfirm, onCancel, title, description }) {
 
     return (
         <div>

@@ -116,7 +116,8 @@ exports.updatePost = async (req, res) => {
   const { title, content, category_id, image_path, tags, published_at } = req.body;
   const newSlug = slugify(title, { lower: true });
 
-  const status = published_at && published_at.trim() !== '' ? 'published' : 'draft';
+  const status = published_at ? 'published' : 'draft';
+  const publishedAtParsed = published_at ? new Date(published_at) : null;
 
   try {
     const existing = await db.select().from(posts).where(and(eq(posts.slug, newSlug), sql`${posts.slug} != ${slug}`));
@@ -133,18 +134,19 @@ exports.updatePost = async (req, res) => {
         category_id,
         image_path,
         tags: JSON.stringify(tags),
-        published_at: published_at || null,
-        status:status,
+        published_at: publishedAtParsed,
+        status: status,
       })
       .where(eq(posts.slug, slug));
 
     res.json({ message: 'Post updated' });
-    console.log('Post updated:', { title, content, category_id, image_path, tags, published_at,status });
+    console.log('Post updated:', { title, content, category_id, image_path, tags, published_at: publishedAtParsed, status });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Internal server error' });
   }
 };
+
 
 // Delete a Post
 exports.deletePost = async (req, res) => {

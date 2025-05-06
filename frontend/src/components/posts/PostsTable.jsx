@@ -227,7 +227,7 @@ import { Button } from "@/components/ui/button";
         id: "actions",
         header: "",
         cell: ({ row }) => (
-          <div className="flex space-x-2">
+          <div className="flex space-x-2 justify-end">
             <div className="flex items-center space-x-[-10px]">
               <EyeIcon className="text-[#A2A2AB] h-4 w-4" />
               <Button
