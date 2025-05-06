@@ -1,4 +1,4 @@
-import { Button } from "@/components/ui/button";
+import { Button }   from "@/components/ui/button";
   import { EyeIcon, PencilSquareIcon, TrashIcon } from "@heroicons/react/24/solid";
   import { flexRender, getCoreRowModel, getFilteredRowModel, getPaginationRowModel, getSortedRowModel, useReactTable } from "@tanstack/react-table";
   import { ArrowUpDown } from "lucide-react";
@@ -19,9 +19,9 @@ import { Button } from "@/components/ui/button";
   import PostsTableHeader from "./PostsTableHeader";
   import PostsTablePagination from "./PostsTablePagination ";
   import { useQuery ,useMutation} from "@tanstack/react-query";
-  import { fetchPosts,deletePost } from "../../api/postApi";
+  import { fetchPosts,deletePost,deleteMultiplePosts } from "../../api/postApi";
   import { useQueryClient } from "@tanstack/react-query";
-
+  import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu";
   const PostsTable = () => {
 
     const queryClient = useQueryClient();
@@ -38,7 +38,7 @@ import { Button } from "@/components/ui/button";
       category_name: false,
       post_slug: false,
     });  
-    
+   // fetch 
     const formatLocalDate = (date) => {
       const year = date.getFullYear();
       const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -54,6 +54,12 @@ import { Button } from "@/components/ui/button";
       staleTime: 5 * 60 * 1000, // 5 minutes caching
       // enabled: !!token, 
     });
+    useEffect(() => {
+      if (data) {
+        setTableData(data);
+      }
+    }, [data]);
+    
 
     //delete
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -84,7 +90,7 @@ import { Button } from "@/components/ui/button";
       setSelectedPostSlug(slug);
       setDeleteDialogOpen(true);
     }, []);
-
+        
     const columns = useMemo( ()=> [
       {
         id: "select",
@@ -260,7 +266,7 @@ import { Button } from "@/components/ui/button";
     ], [handleDeleteClick, navigate]);
 
     const table = useReactTable({
-      data: data || [],
+      data: tableData,
       columns,
       getCoreRowModel: getCoreRowModel(),
       getPaginationRowModel: getPaginationRowModel(),
@@ -292,91 +298,168 @@ import { Button } from "@/components/ui/button";
 
     const selectedRowCount = Object.keys(rowSelection).length;
 
+    //delete multiple posts
+    const { mutate: deleteBulkMutation } = useMutation({
+        mutationFn: deleteMultiplePosts,
+        onSuccess: () => {
+            toast.success("Selected posts deleted successfully!");
+            queryClient.invalidateQueries(["posts"]);
+            setRowSelection({});
+        },
+        onError: () => {
+            toast.error("Failed to delete selected posts.");
+        },
+    });
+    const selectedPostSlugs = table
+        .getFilteredSelectedRowModel()
+        .rows.map((row) => row.original.post_slug);
+    const handleBulkDelete = () => {
+        if (selectedPostSlugs.length === 0) {
+            toast.error("No posts selected.");
+            return;
+        }
+        deleteBulkMutation(selectedPostSlugs);
+    };
+    const selectedCount = selectedPostSlugs.length;
+
     if (isLoading) return <div>Loading posts...</div>;
     if (isError) return <div>Error: {error.message}</div>;
 
     return (
-      <div className="p-4">
-        <div className="rounded-md border bg-white " >
-          <PostsTableHeader
-            table={table}
-            startDate={startDate}
-            setStartDate={setStartDate}
-            endDate={endDate}
-            setEndDate={setEndDate}
-            rowSelection={rowSelection}
-            setRowSelection={setRowSelection}
-            data={tableData}
-          />
-    <div className="w-full overflow-x-auto">
-    <Table className="w-full min-w-[100px] border-collapse">
-            <thead className="border-b">
-              {table.getHeaderGroups().map((headerGroup) => (
-                <TableRow key={headerGroup.id}>
-                  {headerGroup.headers.map((header) => (
-                    <TableCell
-                      key={header.id}
-                      className="px-4 py-2 text-left font-medium"
-                    >
-                      {header.isPlaceholder
-                        ? null
-                        : flexRender(
-                            header.column.columnDef.header,
-                            header.getContext()
-                          )}
-                    </TableCell>
-                  ))}
-                </TableRow>
-              ))}
-            </thead>
-            <TableBody >
-              {table.getRowModel().rows.map((row) => (
-                <TableRow
-                  noBorder={true}
-                  key={row.id}
-                  className={`hover:bg-gray-100 ${
-                    row.getIsSelected() ? "border-l-2 border-orange-400" : ""
-                  } cursor-pointer`}
-                  // onClick={() => navigate(`/posts/${row.original.slug}`)}
-                >
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell
-                      key={cell.id}
-                      className="px-4 py-6 text-left border-b"
-                    >
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext()
-                      )}
-                    </TableCell>
-                  ))}
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-          </div>
-          <DeleteMessageDialog
-            open={deleteDialogOpen}
-            onOpenChange={setDeleteDialogOpen}
-            slug={selectedPostSlug}
-            onPostDeleted={handleDeleteClick}
-            onConfirm={handleConfirmDelete}
-            onCancel={() => setDeleteDialogOpen(false)}
-            title="Delete Post"
-            description="Are you sure you want to delete this post?"
-          />
-          <PostsTablePagination
-            table={table}
-            currentPage={currentPage}
-            setCurrentPage={setCurrentPage}
-            perPage={perPage}
-            setPerPage={setPerPage}
-            data={tableData}
-            rowSelection={rowSelection}
-            setRowSelection={setRowSelection}
-          />
+        <div className="p-4">
+            <div className="rounded-md border bg-white ">
+                <PostsTableHeader
+                    table={table}
+                    startDate={startDate}
+                    setStartDate={setStartDate}
+                    endDate={endDate}
+                    setEndDate={setEndDate}
+                    rowSelection={rowSelection}
+                    setRowSelection={setRowSelection}
+                    data={tableData}
+                />
+                <div className="w-full overflow-x-auto">
+                    {selectedCount > 0 && (
+                        <div className="flex items-center justify-between px-4 py-2 border-b bg-white">
+                            <div className="flex items-center space-x-4">
+                                <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                        <Button variant="outline">
+                                            Bulk actions
+                                        </Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="start">
+                                        <DropdownMenuItem
+                                            onClick={handleBulkDelete}
+                                            className="text-red-600"
+                                        >
+                                            <TrashIcon className="h-4 w-4 mr-2" />
+                                            Delete selected
+                                        </DropdownMenuItem>
+                                    </DropdownMenuContent>
+                                </DropdownMenu>
+
+                                <span className="text-sm text-muted-foreground">
+                                    {selectedCount} record
+                                    {selectedCount !== 1 ? "s" : ""} selected
+                                </span>
+                            </div>
+
+                            <div className="space-x-4 text-sm">
+                                <button
+                                    className="text-orange-600 font-medium"
+                                    onClick={() =>
+                                        table
+                                            .getRowModel()
+                                            .rows.forEach((row) =>
+                                                row.toggleSelected(true)
+                                            )
+                                    }
+                                >
+                                    Select all {table.getRowModel().rows.length}
+                                </button>
+                                <button
+                                    className="text-red-500 font-medium"
+                                    onClick={() =>
+                                        table.toggleAllPageRowsSelected(false)
+                                    }
+                                >
+                                    Deselect all
+                                </button>
+                            </div>
+                        </div>
+                    )}
+                    <Table className="w-full min-w-[100px] border-collapse">
+                        <thead className="border-b">
+                            {table.getHeaderGroups().map((headerGroup) => (
+                                <TableRow key={headerGroup.id}>
+                                    {headerGroup.headers.map((header) => (
+                                        <TableCell
+                                            key={header.id}
+                                            className="px-4 py-2 text-left font-medium"
+                                        >
+                                            {header.isPlaceholder
+                                                ? null
+                                                : flexRender(
+                                                      header.column.columnDef
+                                                          .header,
+                                                      header.getContext()
+                                                  )}
+                                        </TableCell>
+                                    ))}
+                                </TableRow>
+                            ))}
+                        </thead>
+                        <TableBody>
+                            {table.getRowModel().rows.map((row) => (
+                                <TableRow
+                                    noBorder={true}
+                                    key={row.id}
+                                    className={`hover:bg-gray-100 ${
+                                        row.getIsSelected()
+                                            ? "border-l-2 border-orange-400"
+                                            : ""
+                                    } cursor-pointer`}
+                                    // onClick={() => navigate(`/posts/${row.original.slug}`)}
+                                >
+                                    {row.getVisibleCells().map((cell) => (
+                                        <TableCell
+                                            key={cell.id}
+                                            className="px-4 py-6 text-left border-b"
+                                        >
+                                            {flexRender(
+                                                cell.column.columnDef.cell,
+                                                cell.getContext()
+                                            )}
+                                        </TableCell>
+                                    ))}
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
+                </div>
+                <DeleteMessageDialog
+                    open={deleteDialogOpen}
+                    onOpenChange={setDeleteDialogOpen}
+                    slug={selectedPostSlug}
+                    onPostDeleted={handleDeleteClick}
+                    onConfirm={handleConfirmDelete}
+                    onCancel={() => setDeleteDialogOpen(false)}
+                    title="Delete Post"
+                    description="Are you sure you want to delete this post?"
+                />
+                <PostsTablePagination
+                    table={table}
+                    currentPage={currentPage}
+                    setCurrentPage={setCurrentPage}
+                    perPage={perPage}
+                    setPerPage={setPerPage}
+                    data={tableData}
+                    rowSelection={rowSelection}
+                    setRowSelection={setRowSelection}
+                />
+            </div>
         </div>
-      </div>
     );
   };
 
