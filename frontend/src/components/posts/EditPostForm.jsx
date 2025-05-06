@@ -42,11 +42,12 @@ const EditPostForm = () => {
   const [content, setContent] = useState("");
   const [category, setCategory] = useState({ id: "", name: "" });
   const [publishedDate, setPublishedDate] = useState(null);
-  const [tags, setTags] = useState("");
+  const [tags, setTags] = useState([]);
   const [image, setImage] = useState(null);
   const [imageUrl, setImageUrl] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [status, setStatus] = useState("draft");
+
 
   // Function to generate a slug from the title
   const generateSlug = (title) => {
@@ -84,17 +85,35 @@ const EditPostForm = () => {
     queryFn: fetchCategoriesByNames,
     refetchOnWindowFocus: false,
   });
+  
   useEffect(() => {
-    if(post) {
+    if (post) {
       setTitle(post.title);
       setContent(post.content);
       setCategory({ id: String(post.category_id), name: post.category_name });
       setPublishedDate(post.published_at ? new Date(post.published_at) : null);
       setStatus(post.status || "draft");
-      setTags(post.tags || "");
+  
+      // Make sure tags is always an array
+      if (post.tags) {
+        if (Array.isArray(post.tags)) {
+          setTags(post.tags);
+        } else {
+          try {
+            const parsed = JSON.parse(post.tags);
+            setTags(Array.isArray(parsed) ? parsed : [parsed]);
+          } catch {
+            setTags(post.tags.split(",").map((tag) => tag.trim()));
+          }
+        }
+      } else {
+        setTags([]);
+      }
+  
       setImageUrl(post.image_path);
     }
-  },[post]);
+  }, [post]);
+  
 
   const {mutate:editMutation,error} = useMutation({
     mutationFn: ({ slug, data }) => editPost(slug, data),
@@ -158,14 +177,11 @@ const EditPostForm = () => {
         newImageUrl = await uploadImageToFirebase(image);
       }
       const postData = {
-        title,
-        content,
-        category_id: parseInt(category.id),
-        image_path: newImageUrl,
-        tags: tags
-          .split(",")
-          .map((tag) => tag.trim())
-          .filter((tag) => tag),
+          title,
+          content,
+          category_id: parseInt(category.id),
+          image_path: newImageUrl,
+          tags: tags,
           published_at: publishedDate ? publishedDate.getTime() : null,
           slug: newSlug, // Include the new slug in the update
       };
@@ -264,60 +280,43 @@ const EditPostForm = () => {
                       </div>
 
                       <div className="mt-4">
-                          <Label className="mb-3" htmlFor="publishedDate">
-                              Published Date
-                          </Label>
-                          <Popover>
-                              <PopoverTrigger asChild>
-                                  <div className="relative">
-                                      <Input
-                                          type="text"
-                                          value={
-                                              publishedDate
-                                                  ? format(
-                                                        publishedDate,
-                                                        "yyyy-MM-dd"
-                                                    )
-                                                  : ""
-                                          }
-                                          readOnly
-                                          className="w-full pr-10"
-                                      />
-                                      <CalendarIcon className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                                  </div>
-                              </PopoverTrigger>
-                              <PopoverContent
-                                  className="w-auto p-0"
-                                  align="start"
-                              >
-                                  <Calendar
-                                      mode="single"
-                                      selected={publishedDate}
-                                      onSelect={setPublishedDate}
-                                      initialFocus
-                                      disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
-                                  />
-                              </PopoverContent>
-                          </Popover>
-                      </div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-4 mt-4">
-                      <div className="mt-4">
-                          <Label className="mb-4" htmlFor="tags">
-                              Tags
-                          </Label>
-                          <Input
-                              type="text"
-                              id="tags"
-                              value={tags}
-                              onChange={(e) => setTags(e.target.value)}
-                              placeholder={
-                                  tags.trim()
-                                      ? "Comma-separated tags"
-                                      : "No tags"
-                              }
-                          />
-                      </div>
+  <Label className="mb-4" htmlFor="tags">Tags</Label>
+  <div className="border rounded px-2 py-1 flex flex-wrap gap-2 min-h-[40px]">
+    {tags.map((tag, index) => (
+      <span
+        key={index}
+        className="flex items-center bg-orange-50 text-orange-600 text-sm font-medium px-2 py-1 rounded"
+      >
+        {tag}
+        <button
+          type="button"
+          onClick={() =>
+            setTags((prev) => prev.filter((_, i) => i !== index))
+          }
+          className="ml-1 text-orange-500 hover:text-orange-700 text-xs"
+        >
+          ×
+        </button>
+      </span>
+    ))}
+    <input
+      type="text"
+      className="flex-1 border-none outline-none text-sm"
+      placeholder="New tag"
+      onKeyDown={(e) => {
+        if (e.key === "Enter" && e.currentTarget.value.trim()) {
+          e.preventDefault();
+          const newTag = e.currentTarget.value.trim();
+          if (!tags.includes(newTag)) {
+            setTags([...tags, newTag]);
+          }
+          e.currentTarget.value = "";
+        }
+      }}
+    />
+  </div>
+</div>
+
                   </div>
               </div>
               <div className="bg-white w-full p-5 mt-7 rounded-lg border">
