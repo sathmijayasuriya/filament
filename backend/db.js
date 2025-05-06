@@ -1,5 +1,7 @@
 const mysql = require('mysql2/promise');
 const dotenv = require('dotenv');
+const { drizzle } = require('drizzle-orm/mysql2');
+const { categories, posts ,users,authors} = require('./db/schema/schema');
 
 dotenv.config();
 
@@ -14,4 +16,13 @@ const pool = mysql.createPool({
   queueLimit: 0,
 });
 
-module.exports = pool;
+const db = drizzle(pool, 
+            { schema: { categories, posts,users,authors },mode: 'default', });
+
+
+module.exports = { db, pool, categories, posts, users,authors }; 
+
+// module.exports = {
+//   pool,
+//   testConnection,
+// };

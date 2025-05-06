@@ -21,32 +21,35 @@ import { app } from "../../firebase";
 import ImageUpload from "./ImageUpload ";
 import { useNavigate } from 'react-router-dom'; // Import useNavigate
 import TagInput from "./TagInput";
-
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { createPost } from "../../api/postApi";
+import { useQueryClient } from "@tanstack/react-query";
+import {fetchCategoriesByNames} from "../../api/categoryApi";
 const PostForm = () => {
+  const queryClient = useQueryClient();
   const [title, setTitle] = useState("");
   const [slug, setSlug] = useState("");
   const [content, setContent] = useState("");
   const [category, setCategory] = useState({ id: "", name: "" });
   const [categories, setCategories] = useState([]);
   const [publishedDate, setPublishedDate] = useState(null);
-  const [tags, setTags] = useState("");
+  const [tags, setTags] = useState([]);
   const [image, setImage] = useState(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState(null);
-
   const navigate = useNavigate();
 
-  // Fetch categories from backend
-  useEffect(() => {
-    fetch("http://localhost:5000/api/categories/names")
-      .then((res) => res.json())
-      .then((data) => setCategories(data))
-      .catch((error) => {
-        console.error("Error fetching categories:", error);
-        setError("Failed to fetch categories");
-      });
-  }, []);
-
+  const { data } = useQuery({
+    queryKey: ["categories"],
+    queryFn: fetchCategoriesByNames,
+    // refetchOnWindowFocus: false,
+    onSuccess: (data) => {
+      setCategories(data);
+    },
+    onError: (error) => {
+      console.error("Error fetching categories:", error);
+      setError("Failed to fetch categories");
+    },
+  })
   // Auto-generate slug from title
   useEffect(() => {
     setSlug(title.toLowerCase().replace(/\s+/g, "-"));
@@ -105,73 +108,53 @@ const PostForm = () => {
     console.log("data ",setTitle)
   };
 
+  const {mutate: createPostMutation,isLoading} = useMutation({
+    mutationFn: createPost,
+    onSuccess: () => {
+      toast.success("Post created successfully!");
+      resetForm();
+      queryClient.invalidateQueries(["posts"]);
+        navigate("/posts");
+    },
+    onError: (error) => {
+      console.error("Error creating post:", error);
+      setError("An error occurred while creating the post");
+      toast.error("An error occurred while creating the post");
+    },
+  })
+
   //  submission
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(null);
-    
     if (!title || !content || !category.id) {
       toast.error("Please fill in all required fields.");
       return;
     }
-
-    setIsSubmitting(true);
+    // setIsSubmitting(true);
     let imageUrl = "";
-    
-    try {
       if (image) {
         console.log("Starting image upload...");
         imageUrl = await uploadImageToFirebase(image);
         console.log("Image uploaded successfully:", imageUrl);
       }
-//data
       const postData = {
         title,
         slug,
         content,
         category_id: parseInt(category.id),
         image_path: imageUrl,
-        tags: tags,
+        tags: JSON.stringify(tags), 
         published_at: publishedDate ? format(publishedDate, "yyyy-MM-dd") : null,
       };
-
-      console.log("Sending post data:", postData);
-
-      const response = await fetch("http://localhost:5000/api/posts/create", {
-        method: "POST",
-        headers: { 
-          "Content-Type": "application/json",
-          "Accept": "application/json"
-        },
-        body: JSON.stringify(postData),
-      });
-      
-      console.log("Response status:", response.status);
-      
-      const responseData = await response.json();
-      console.log("Response data:", responseData);
-
-      if (response.ok) {
-        toast.success("Post created successfully!");
-        setTitle("");
-        setSlug("");
-        setContent("");
-        setCategory({ id: "", name: "" });
-        setPublishedDate(null);
-        setTags("");
-        setImage(null);
-        navigate('/posts'); 
-      } else {
-        setError(responseData.error || "Failed to create post");
-        toast.error(responseData.error || "Failed to create post");
+      console.log("Post data:", postData);
+      try {
+        await createPostMutation(postData);
+      } catch (error) {
+        console.error("Error creating post:", error);
+        setError("An error occurred while creating the post");
       }
-    } catch (error) {
-      console.error("Error submitting post:", error);
-      setError("An error occurred while creating the post");
-      toast.error("An error occurred while creating the post");
-    } finally {
-      setIsSubmitting(false);
-    }
+      
   };
 
   return (
@@ -270,6 +253,7 @@ const PostForm = () => {
                   selected={publishedDate}
                   onSelect={setPublishedDate}
                   initialFocus
+                  disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
                 />
               </PopoverContent>
             </Popover>
@@ -300,15 +284,15 @@ const PostForm = () => {
         <Button
           className="bg-orange-400 hover:bg-orange-500 text-white"
           type="submit"
-          disabled={isSubmitting}
-        >
-          {isSubmitting ? "Creating..." : "Create"}
+          disabled={isLoading}
+          >
+          {isLoading ? "Creating..." : "Create"}
         </Button>
         <Button onClick={resetForm} type="button" variant="outline">
           Create & create another
         </Button>
         <Button
-          disabled={isSubmitting} 
+          disabled={isLoading} 
           onClick={cancel}
           type="button"
           variant="outline"

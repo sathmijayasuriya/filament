@@ -7,7 +7,7 @@ import {
 } from "@/components/ui/breadcrumb";
 import { Link } from "react-router-dom";
 import CreateCategoryDialog from "./CreateCategoryDialog";
-import React, { useState } from "react";
+import React, { useCallback, useState } from "react";
 
 export default function CategoryHeader({onCategoryCreated }) {
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
@@ -16,9 +16,9 @@ export default function CategoryHeader({onCategoryCreated }) {
     setCreateDialogOpen(true);
   };
 
-  const handleCloseDialog = () => {
+  const handleCloseDialog = useCallback( ()=> {
     setCreateDialogOpen(false);
-  };
+  }, []);
 
   const handleConfirm = () => {
     console.log("Category created!");
