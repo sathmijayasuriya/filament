@@ -192,12 +192,39 @@ export default function PostView() {
                                                         </TableCell>
                                                     </TableRow>
                                                     <TableRow noBorder={true}>
-                                                        <TableCell className="text-sm py-1">
-                                                            {formatTags(
-                                                                post.tags
-                                                            )}
-                                                        </TableCell>
-                                                    </TableRow>
+                                                    <TableCell className="text-sm py-1 flex flex-wrap gap-2">
+                                                    {(() => {
+    let tagArray = [];
+
+    if (Array.isArray(post.tags)) {
+        tagArray = post.tags;
+    } else if (typeof post.tags === "string") {
+        try {
+            const parsed = JSON.parse(post.tags);
+            if (Array.isArray(parsed)) tagArray = parsed;
+        } catch {
+            tagArray = post.tags.split(",").map(t => t.trim());
+        }
+    }
+
+    return tagArray.length > 0 ? (
+        tagArray.map((tag, index) => (
+            <Badge
+                key={index}
+                className="bg-orange-50 text-orange-600 text-xs font-medium px-2 py-1 rounded-md"
+            >
+                {tag}
+            </Badge>
+        ))
+    ) : (
+        "-"
+    );
+})()}
+
+</TableCell>
+
+</TableRow>
+
                                                 </TableBody>
                                             </Table>
                                         </div>

@@ -69,13 +69,13 @@ import { Checkbox } from "@/components/ui/checkbox";
     const handleEndDateChange = useCallback((date) => {
       setEndDate(date);
     }, [setEndDate]);
-    const handleSelectAll = useCallback(() => {
-      table.toggleAllPageRowsSelected(true);
-    }, [table]);
+    // const handleSelectAll = useCallback(() => {
+    //   table.toggleAllPageRowsSelected(true);
+    // }, [table]);
 
-    const handleDeselectAll = useCallback(() => {
-      table.toggleAllPageRowsSelected(false);
-    }, [table]);
+    // const handleDeselectAll = useCallback(() => {
+    //   table.toggleAllPageRowsSelected(false);
+    // }, [table]);
 
     const resetfilter = useCallback(() => {
       setEndDate(null);
@@ -193,7 +193,7 @@ import { Checkbox } from "@/components/ui/checkbox";
             </MenubarMenu>
           </Menubar>
         </div>
-        {hasSelectedRows && (
+        {/* {hasSelectedRows && (
           <div className="border-t">
             <div className="flex justify-between items-center mx-3 py-1 my-3 space-x-2">
               <span className="text-gray-600 font-semibold">
@@ -215,7 +215,7 @@ import { Checkbox } from "@/components/ui/checkbox";
               </div>
             </div>
           </div>
-        )}
+        )} */}
       </div>
     );
   };

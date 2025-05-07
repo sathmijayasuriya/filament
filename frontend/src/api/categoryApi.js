@@ -45,3 +45,10 @@ export const editCategory = async (slug, data) => {
     console.log("response data: ", response.data);
     return response.data;
 };
+
+//fetch categories by names
+export const fetchCategoriesByNames = async () => {
+    const response = await axiosInstance.get("/categories/names",);
+    console.log("RAW RESPONSE:", response);
+    return response.data;
+};

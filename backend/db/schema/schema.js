@@ -58,5 +58,16 @@ const authors = mysqlTable("authors", {
   updated_at: timestamp("updated_at").onUpdateNow(),
 });
 
+const links = mysqlTable("links", {
+  id: int("id").primaryKey().autoincrement(),
+  title: varchar("title", { length: 255 }).notNull(),
+  color: varchar("color", { length: 7 }).notNull(), // Hex color 
+  description: text("description"),
+  url: varchar("url", { length: 2048 }).notNull(),
+  image: varchar("image", { length: 255 }), 
+  created_at: timestamp("created_at").defaultNow(),
+  updated_at: timestamp("updated_at").onUpdateNow(),
+});
 
-module.exports = { categories, posts, users, authors };
+
+module.exports = { categories, posts, users, authors,links };

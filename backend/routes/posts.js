@@ -10,5 +10,6 @@ router.get('/view/:slug', postsController.getPostBySlug);
 router.post('/create', postsController.createPost);
 router.put('/edit/:slug', postsController.updatePost);
 router.delete('/delete/:slug', postsController.deletePost);
+router.post('/delete/bulk-delete', postsController.deleteMultiplePosts);
 
 module.exports = router;

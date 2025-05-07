@@ -71,9 +71,6 @@ export default function EditCategoryDialog({
     }, [
         name,
         isVisible,
-        category?.slug,
-        updateCategory,
-        navigate,
         onOpenChange,
         onCategoryUpdated,
     ]);

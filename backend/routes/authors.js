@@ -10,5 +10,6 @@ router.get('/:id', authorsController.getAuthorById);
 router.post('/create', authorsController.createAuthor);
 router.put('/update/:id', authorsController.updateAuthor);
 router.delete('/delete/:id', authorsController.deleteAuthor);
+router.post('/delete-bulk', authorsController.deleteBulkAuthors);
 
 module.exports = router;

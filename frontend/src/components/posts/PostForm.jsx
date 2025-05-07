@@ -36,6 +36,14 @@ const PostForm = () => {
   const [tags, setTags] = useState([]);
   const [image, setImage] = useState(null);
   const [error, setError] = useState(null);
+
+  //calendar CLose
+  const [calenderOpen, setCalendarOpen] = useState(false);
+  const handleSelect = (date) => {
+    setPublishedDate(date);
+    setCalendarOpen(false); // Close the popover
+  };
+
   const navigate = useNavigate();
 
   const { data } = useQuery({
@@ -233,7 +241,7 @@ const PostForm = () => {
             <Label className="mb-3" htmlFor="publishedDate">
               Published Date
             </Label>
-            <Popover>
+            <Popover open = {calenderOpen} onOpenChange={setCalendarOpen}>
               <PopoverTrigger asChild>
                 <div className="relative">
                   <Input
@@ -251,7 +259,7 @@ const PostForm = () => {
                 <Calendar
                   mode="single"
                   selected={publishedDate}
-                  onSelect={setPublishedDate}
+                  onSelect={handleSelect}
                   initialFocus
                   disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
                 />

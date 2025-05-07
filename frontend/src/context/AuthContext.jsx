@@ -9,7 +9,7 @@ export default function AuthProvider({children}) {
 
     useEffect(()=>{
         if(token){
-            setUser({});
+            setUser({});  //signifies that the user is authenticated
         }
     },[token])
 
@@ -22,7 +22,6 @@ export default function AuthProvider({children}) {
         setUser(null);
         localStorage.removeItem("token")
     }
-
   return (
     <AuthContext.Provider value={{token,user,login,logout}}>
       {children}
