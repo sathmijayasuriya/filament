@@ -44,5 +44,13 @@ export const editPost = async (slug, data) => {
     return response.data;
  };
 
-
+// delete multiple posts
+export const deleteMultiplePosts = async (slugs) => {
+    const response = await axiosInstance.post(
+        `/posts/delete/bulk-delete`,
+        {slugs}
+    );
+    console.log("response data: ", response.data);
+    return response.data;
+};
 

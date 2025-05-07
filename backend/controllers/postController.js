@@ -1,6 +1,6 @@
 const slugify = require('slugify');
 const { db, posts, categories } = require('../db'); // Import Drizzle and schema
-const { eq, sql, and, gte, lte } = require('drizzle-orm');
+const { eq, sql, and, gte, lte, inArray } = require('drizzle-orm');
 
 // Get All Posts (With Filtering)
 exports.getAllPosts = async (req, res) => {
@@ -158,4 +158,20 @@ exports.deletePost = async (req, res) => {
     console.error(error);
     res.status(500).json({ error: 'Internal server error' });
   }
+};
+
+//delete multiple posts
+exports.deleteMultiplePosts = async (req, res) => {
+    const { slugs } = req.body;
+    console.log("received slugs:", slugs);
+    if (!Array.isArray(slugs) || slugs.length === 0) {
+        return res.status(400).json({ error: "Invalid slugs array" });
+    }
+    try {
+        await db.delete(posts).where(inArray(posts.slug, slugs));
+        res.json({ message: "Posts deleted" });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "Internal server error" });
+    }
 };
