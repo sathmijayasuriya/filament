@@ -128,6 +128,12 @@ export default function LinksTable() {
                                         src={link.image}
                                         alt={link.title}
                                         className="w-full h-50 object-cover"
+                                        onClick={() => {
+                                            navigate(`/links/edit/${link.id}`);
+                                            toast("Edit clicked for " + link.title,{
+                                                duration: 800,
+                                            });
+                                        }}
                                     />
                                     <Checkbox
                                         className="absolute top-2 left-2 bg-white rounded shadow-sm"
