@@ -13,7 +13,7 @@ import ProtectedRoute from "./ProtectedRoute";
 import Links from "../views/Links"
 import LinksCreate from "../views/LinksCreate";
 import LinksEdit from "../views/LinksEdit";
-
+import Linksdisplay from "../views/Linksdisplay";
 const router = createBrowserRouter([
   {
     path: "/login",
@@ -65,6 +65,10 @@ const router = createBrowserRouter([
           {
             path: "links/edit/:id",
             element: <LinksEdit />,
+          },
+          {
+            path: "links/:id",
+            element: <Linksdisplay />,
           },
           {
             path: "*",

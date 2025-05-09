@@ -41,5 +41,5 @@ export const deleteLink = async (id) => {
 export const getLinkById = async (id) => {
     const response = await axiosInstance.get(`/links/${id}`);
     console.log("response data: ", response.data);
-    return response.data[0]; 
+    return response.data; 
 };
