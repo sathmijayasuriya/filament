@@ -6,15 +6,15 @@ A full-stack application for managing blog posts and categories.
 
 ## Features
 
-- ✅ **Category Management:**
+- **Category Management:**
     - Add, Edit, Delete, View all, and View individual categories.
-- ✅ **Post Management:**
+- **Post Management:**
     - Add, Edit, Delete, View all, and View individual posts.
-- ✅ **Image Upload:**
+- **Image Upload:**
     - Integrated image upload using Firebase Storage.
-- ✅ **Database:**
+- **Database:**
     - MySQL database with migrations.
-- ✅ **Styling:**
+- **Styling:**
     - Styled using Tailwind CSS and shadcn/ui for a modern user interface.
 
 ---
